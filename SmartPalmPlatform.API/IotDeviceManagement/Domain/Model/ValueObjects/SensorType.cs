@@ -5,6 +5,7 @@ public enum SensorType
     Temperature,
     Humidity,
     Pressure,
+    Luminosity,
     GasResistance,
     Voltage,
     Current,
