@@ -1,35 +1,60 @@
 using Microsoft.AspNetCore.Mvc;
-using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
-    [Route("api/v1/device/auth")]
+    [Route("api/v1/device")]
     [ApiController]
-    public class DeviceAuthenticationController : ControllerBase
+    public class DeviceAuthenticationController(
+        IDeviceStatusCommandService deviceStatusCommandService
+    ) : ControllerBase
     {
-        private readonly IDeviceStatusCommandService _deviceStatusCommandService;
-
-        public DeviceAuthenticationController(
-            IDeviceStatusCommandService deviceStatusCommandService
-        )
-        {
-            _deviceStatusCommandService = deviceStatusCommandService;
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> RegisterDevice(
-            [FromBody] DeviceRegistrationResource resource
+        [HttpPost("edge/{edgeMac}/zone/{monitoringZoneId}/auth/register")]
+        public async Task<IActionResult> RegisterEdgeDevice(
+            [FromRoute] string edgeMac,
+            [FromRoute] int monitoringZoneId,
+            [FromBody] EdgeDeviceRegistrationResource resource
         )
         {
             try
             {
-                var command = RegisterDeviceCommandFromResourceAssembler.ToCommandFromResource(
+                var command = RegisterEdgeDeviceCommandFromResourceAssembler.ToCommandFromResource(
+                    edgeMac,
+                    monitoringZoneId,
                     resource
                 );
 
-                await _deviceStatusCommandService.Handle(command);
+                await deviceStatusCommandService.Handle(command);
+
+                return Created();
+            }
+            catch (Exception e)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = e.Message }
+                );
+            }
+        }
+
+        [HttpPost("edge/{edgeMac}/iot/{iotMac}/auth/register")]
+        public async Task<IActionResult> RegisterIotDevice(
+            [FromRoute] string iotMac,
+            [FromRoute] string edgeMac,
+            [FromBody] IotDeviceRegistrationResource resource
+        )
+        {
+            try
+            {
+                var command = RegisterIotDeviceCommandFromResourceAssembler.ToCommandFromResource(
+                    edgeMac,
+                    iotMac,
+                    resource
+                );
+
+                await deviceStatusCommandService.Handle(command);
 
                 return Created();
             }

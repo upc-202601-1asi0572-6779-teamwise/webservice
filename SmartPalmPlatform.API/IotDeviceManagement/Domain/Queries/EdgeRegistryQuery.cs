@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.IotDeviceManagement.Domain.Queries;
 
-public record ConnectiviyStatusQuery(string mac);
+public record EdgeRegistryQuery(string EdgeDeviceMac);

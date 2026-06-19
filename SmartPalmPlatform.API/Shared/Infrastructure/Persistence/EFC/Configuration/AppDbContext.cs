@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
-using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
+//using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 
 namespace SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
@@ -83,7 +83,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .Property(registry => registry.IotDeviceMacAddresses)
             .IsRequired();
         builder.Entity<EdgeRegistry>().Property(registry => registry.CreatedAt).IsRequired();
-
+/*
         builder.Entity<AgronomicThreshold>().ToTable("agronomic_thresholds");
         builder.Entity<AgronomicThreshold>().HasKey(threshold => threshold.Id);
         builder
@@ -106,7 +106,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .Property(threshold => threshold.Description)
             .IsRequired();
         builder.Entity<AgronomicThreshold>().Property(threshold => threshold.Type).IsRequired();
-
+*/
         // Apply IAM context configuration
         //builder.ApplyIamConfiguration();
 
