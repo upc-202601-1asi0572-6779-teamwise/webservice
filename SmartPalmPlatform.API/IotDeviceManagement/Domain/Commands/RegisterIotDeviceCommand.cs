@@ -1,8 +1,8 @@
 namespace SmartPalmPlatform.API.IotDeviceManagement.Domain.Commands;
 
-public record RegisterDeviceCommand(
-    string serial,
-    int monitoringZoneId,
+public record RegisterIotDeviceCommand(
+    string EdgeDeviceMac,
+    string IotDeviceMac,
     string Username,
     string Password
 );
