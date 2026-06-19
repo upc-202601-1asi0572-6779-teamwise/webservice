@@ -1,16 +1,31 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using SmartPalmPlatform.API.IotDeviceManagement.Application.CommandServices;
-using SmartPalmPlatform.API.IotDeviceManagement.Application.QueryServices;
+using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.QueryServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Repositories;
-using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.IotDeviceManagement.Infrastructure.Persistance.EFC.Repositories;
+using SmartPalmPlatform.API.SensorDataProcessing.Application.CommandServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Application.DomainServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Application.EventHandlers;
+using SmartPalmPlatform.API.SensorDataProcessing.Application.QueryServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Repositories;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Infraestructure.Persistance.EFC;
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configure Events
 
+// Add services to the container.
 builder.Services.AddControllers();
 
 // Configure Database Context and Logging Levels
@@ -44,16 +59,37 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 // Configure Dependency Injection
 
-// Shared Bounded Context Injection Configuration
+// // Shared Bounded Context
+
+// Injection Configuration
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// IoT Device Bounded Context Injection Configuration
+// //  IoT Device Bounded Context
+
+// Injection Configuration
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
+builder.Services.AddScoped<IEdgeDeviceRepository, EdgeDeviceRepository>();
+builder.Services.AddScoped<IEdgeRegistryRepository, EdgeRegistryRepository>();
 
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
 builder.Services.AddScoped<IDeviceStatusQueryService, DeviceStatusQueryService>();
+builder.Services.AddScoped<IEdgeSynchronizationService, EdgeSynchronizationService>();
 
-builder.Services.AddScoped<IEdgeSynchronizationService, EdgeSyncrhonizationService>();
+// // Sensor Data Processing Bounded Context
+
+// Injection Configuration
+builder.Services.AddScoped<ISensorReadingRepository, SensorReadingRepository>();
+builder.Services.AddScoped<IAgronomicThresholdRepository, AgronomicThresholdRepository>();
+
+builder.Services.AddScoped<ISensorReadingCommandService, SensorReadingCommandService>();
+builder.Services.AddScoped<IAgronomicThresholdQueryService, AgronomicThresholdQueryService>();
+builder.Services.AddScoped<IThresholdEvaluationService, ThresholdEvaluationService>();
+
+// Event Handlers
+builder.Services.AddMediatR(config =>
+{
+    config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
+});
 
 // CQRS Configuration
 builder.Services.AddCors(options =>
