@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Entities;
+
 namespace SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 
 /// <summary>
@@ -55,6 +58,85 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
 
         // Apply IAM context configuration
         //builder.ApplyIamConfiguration();
+
+
+        // Agronomic Recommendation Bounded Context Configuration
+        builder.Entity<Recommendation>().ToTable("recommendations");
+        builder.Entity<Recommendation>().HasKey(recommendation => recommendation.Id);
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+
+        builder.Entity<Recommendation>().Property(recommendation => recommendation.PlantationId).IsRequired();
+        builder.Entity<Recommendation>().Property(recommendation => recommendation.AgronomistId).IsRequired();
+
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.Content)
+            .IsRequired()
+            .HasMaxLength(500);
+
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.Type)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.Status)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Entity<Recommendation>().Property(recommendation => recommendation.CreatedAt).IsRequired();
+        builder.Entity<Recommendation>().Property(recommendation => recommendation.ApprovedAt);
+        builder.Entity<Recommendation>().Property(recommendation => recommendation.PublishedAt);
+
+        builder.Entity<AgronomicIntervention>().ToTable("agronomic_interventions");
+        builder.Entity<AgronomicIntervention>().HasKey(intervention => intervention.Id);
+        builder
+            .Entity<AgronomicIntervention>()
+            .Property(intervention => intervention.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+
+        builder
+            .Entity<AgronomicIntervention>()
+            .Property(intervention => intervention.RecommendationId)
+            .IsRequired();
+
+        builder
+            .Entity<AgronomicIntervention>()
+            .Property(intervention => intervention.Description)
+            .IsRequired()
+            .HasMaxLength(500);
+
+        builder
+            .Entity<AgronomicIntervention>()
+            .Property(intervention => intervention.PerformedBy)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder
+            .Entity<AgronomicIntervention>()
+            .Property(intervention => intervention.ExecutionDate)
+            .IsRequired();
+
+        builder
+            .Entity<AgronomicIntervention>()
+            .Property(intervention => intervention.CreatedAt)
+            .IsRequired();
+
+        builder
+            .Entity<AgronomicIntervention>()
+            .HasOne<Recommendation>()
+            .WithMany()
+            .HasForeignKey(intervention => intervention.RecommendationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Apply snake_case naming convention LAST (only once!)
         builder.UseSnakeCaseNamingConvention();

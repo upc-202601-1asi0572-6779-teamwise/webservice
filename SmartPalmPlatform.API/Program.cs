@@ -7,6 +7,11 @@ using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
 
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -49,6 +54,11 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // IoT Device Bounded Context Injection Configuration
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
+
+// Agronomic Recommendation Bounded Context Injection Configuration
+builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+builder.Services.AddScoped<IRecommendationCommandService, RecommendationCommandService>();
+builder.Services.AddScoped<IRecommendationQueryService, RecommendationQueryService>();
 
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
 builder.Services.AddScoped<IDeviceStatusQueryService, DeviceStatusQueryService>();
