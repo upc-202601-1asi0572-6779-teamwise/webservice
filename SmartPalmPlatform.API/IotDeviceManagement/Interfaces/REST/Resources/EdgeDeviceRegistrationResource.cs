@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Resources;
 
-public record ActivationStatusResource(string serialNumber, bool isActive);
+public record EdgeDeviceRegistrationResource(string username, string password);
