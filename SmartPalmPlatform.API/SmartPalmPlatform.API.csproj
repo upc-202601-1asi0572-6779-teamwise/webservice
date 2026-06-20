@@ -7,7 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9"/>
+        <PackageReference Include="MediatR" Version="14.1.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
         <!-- Dependency Injection related packages -->
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -15,30 +16,31 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
         <!-- EntityFrameworkCore Database Persistence related packages -->
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9" />
         <!--<PackageReference Include="Microsoft.EntityFrameworkCore.Relational.Design" Version="1.1.6"/>-->
         <!-- MySQL Database Persistence related packages -->
-        <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.7"/>
+        <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.7" />
         <!-- Audit Trails related packages -->
-        <PackageReference Include="EntityFrameworkCore.CreatedUpdatedDate" Version="8.0.0"/>
+        <PackageReference Include="EntityFrameworkCore.CreatedUpdatedDate" Version="8.0.0" />
         <!-- Naming convention conversion related packages -->
-        <PackageReference Include="Humanizer" Version="3.0.10"/>
+        <PackageReference Include="Humanizer" Version="3.0.10" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
         <!-- OpenAPI documentation related packages -->
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1"/>
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.2.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.2.1" />
         <!-- BCrypt Encription related packages -->
-        <PackageReference Include="BCrypt.Net-Next" Version="4.2.0"/>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
         <!-- JSON Web Token related packages -->
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.19.1" />
         <!-- Mediator pattern related packages -->
-        <PackageReference Include="Cortex.Mediator" Version="3.1.2"/>
+        <PackageReference Include="Cortex.Mediator" Version="3.1.2" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Shared\Infrastructure\Persistence\EFC\Migrations\" />
+        <Folder Include="Shared\Infrastructure\Persistence\EFC\Migrations\" />
     </ItemGroup>
 
 </Project>
