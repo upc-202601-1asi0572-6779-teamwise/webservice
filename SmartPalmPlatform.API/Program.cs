@@ -21,6 +21,10 @@ using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
 
+// Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
+// This switch restores the pre-v6 behavior so Local datetimes are accepted.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Detect production environment (Render sets PORT and RENDER env vars)
