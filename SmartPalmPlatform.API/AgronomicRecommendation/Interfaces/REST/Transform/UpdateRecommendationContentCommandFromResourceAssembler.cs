@@ -6,13 +6,18 @@ namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Transfor
 public static class UpdateRecommendationContentCommandFromResourceAssembler
 {
     public static UpdateRecommendationContentCommand ToCommandFromResource(
+        int agronomistId,
+        int plantationId,
         int recommendationId,
         UpdateRecommendationContentResource resource
     )
     {
         return new UpdateRecommendationContentCommand(
+            agronomistId,
+            plantationId,
             recommendationId,
             resource.content
         );
     }
 }
+

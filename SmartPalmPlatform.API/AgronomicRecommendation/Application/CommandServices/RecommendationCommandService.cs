@@ -15,6 +15,8 @@ public class RecommendationCommandService(
 {
     public async Task<Recommendation> Handle(CreateRecommendationCommand command)
     {
+        // TODO: validate if agronomist exists and if plantation exists
+
         var recommendation = new Recommendation(
             command.PlantationId,
             command.AgronomistId,
@@ -29,6 +31,7 @@ public class RecommendationCommandService(
 
     public async Task<Recommendation> Handle(UpdateRecommendationContentCommand command)
     {
+        // TODO: validate if agronomist exists, if plantation exists and if recommendation exists
         var recommendation = await recommendationRepository.FindByIdAsync(command.RecommendationId);
 
         if (recommendation is null)
@@ -44,6 +47,7 @@ public class RecommendationCommandService(
 
     public async Task<Recommendation> Handle(ApproveRecommendationCommand command)
     {
+        // TODO: validate if agronomist exists, if plantation exists and if recommendation exists
         var recommendation = await recommendationRepository.FindByIdAsync(command.RecommendationId);
 
         if (recommendation is null)
@@ -59,6 +63,7 @@ public class RecommendationCommandService(
 
     public async Task<Recommendation> Handle(PublishRecommendationCommand command)
     {
+        // TODO: validate if agronomist exists, if plantation exists and if recommendation exists
         var recommendation = await recommendationRepository.FindByIdAsync(command.RecommendationId);
 
         if (recommendation is null)
@@ -72,10 +77,9 @@ public class RecommendationCommandService(
         return recommendation;
     }
 
-    public async Task<AgronomicIntervention> Handle(
-        RegisterAgronomicInterventionCommand command
-    )
+    public async Task<AgronomicIntervention> Handle(RegisterAgronomicInterventionCommand command)
     {
+        // TODO: validate if agronomist exists, if plantation exists and if recommendation exists
         var recommendation = await recommendationRepository.FindByIdAsync(command.RecommendationId);
 
         if (recommendation is null)
@@ -97,3 +101,4 @@ public class RecommendationCommandService(
         return intervention;
     }
 }
+
