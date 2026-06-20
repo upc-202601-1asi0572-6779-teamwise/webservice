@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.QueryServices;
@@ -144,7 +146,43 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Checking for pending migrations...");
+        var migrationsAssembly = context.Database.GetService<IMigrationsAssembly>();
+        logger.LogInformation("Migrations Assembly: {AssemblyName}", migrationsAssembly.Assembly.FullName);
+        
+        // Log all assemblies to check if OsitoPolarPlatform.API is loaded
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        logger.LogInformation("Loaded assemblies: {Assemblies}", string.Join(", ", assemblies.Select(a => a.FullName)));
+
+        // Explicitly load migrations
+        var migrationIds = migrationsAssembly.Migrations.Keys.ToList();
+        logger.LogInformation("Detected migrations: {Migrations}", string.Join(", ", migrationIds));
+
+        var appliedMigrations = context.Database.GetAppliedMigrations().ToList();
+        var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+        logger.LogInformation("Applied migrations: {Applied}", string.Join(", ", appliedMigrations));
+        logger.LogInformation("Pending migrations: {Pending}", string.Join(", ", pendingMigrations));
+        
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("Applying migrations...");
+            context.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        else
+        {
+            logger.LogInformation("No pending migrations found.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error applying database migrations: {Message}", ex.Message);
+        throw;
+    }
 }
 
 // Configure the HTTP request pipeline.
