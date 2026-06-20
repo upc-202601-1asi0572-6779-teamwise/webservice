@@ -48,11 +48,10 @@ public class ReadDeviceSensorDataController(
     {
         try
         {
-            var query = new SensorReadingQuery(
-                edgeMac,
-                from ?? DateTime.SpecifyKind(DateTime.Now.AddHours(-24), DateTimeKind.Unspecified),
-                to ?? DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified)
-            );
+            var resolvedFrom = from ?? DateTime.MinValue;
+            var resolvedTo   = to   ?? DateTime.MaxValue;
+
+            var query = new SensorReadingQuery(edgeMac, resolvedFrom, resolvedTo);
 
             var readings = await sensorReadingQueryService.Handle(query);
             var response = SensorReadingViewResourceFromAggregateAssembler
