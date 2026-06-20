@@ -19,6 +19,10 @@ public static class AgronomicThresholdTypeFactory
                 return PHSensorThreshold(edgeDeviceMacAddress, iotDeviceMacAddress);
             case SensorType.Luminosity:
                 return LuminositySensorThreshold(edgeDeviceMacAddress, iotDeviceMacAddress);
+            case SensorType.Temperature:
+                return TemperatureSensorThreshold(edgeDeviceMacAddress, iotDeviceMacAddress);
+            case SensorType.SoilMoisture:
+                return SoilMoistureSensorThreshold(edgeDeviceMacAddress, iotDeviceMacAddress);
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -75,6 +79,42 @@ public static class AgronomicThresholdTypeFactory
             max,
             description,
             SensorType.Luminosity
+        );
+    }
+
+    public static AgronomicThreshold TemperatureSensorThreshold(
+        string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
+        double min = 10,
+        double max = 40,
+        string description = "Temperature Sensor Threshold"
+    )
+    {
+        return new AgronomicThreshold(
+            edgeDeviceMacAddress,
+            iotDeviceMacAddress,
+            min,
+            max,
+            description,
+            SensorType.Temperature
+        );
+    }
+
+    public static AgronomicThreshold SoilMoistureSensorThreshold(
+        string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
+        double min = 20,
+        double max = 80,
+        string description = "Soil Moisture Sensor Threshold"
+    )
+    {
+        return new AgronomicThreshold(
+            edgeDeviceMacAddress,
+            iotDeviceMacAddress,
+            min,
+            max,
+            description,
+            SensorType.SoilMoisture
         );
     }
 }
