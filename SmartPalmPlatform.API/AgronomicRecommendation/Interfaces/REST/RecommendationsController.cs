@@ -103,11 +103,7 @@ public class RecommendationsController(
                 recommendation
             );
 
-            return CreatedAtAction(
-                nameof(GetRecommendationById),
-                new { id = response.id },
-                response
-            );
+            return Ok(response);
         }
         catch (Exception e)
         {
