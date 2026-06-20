@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
@@ -75,6 +76,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         var connectionString = ParseDatabaseUrl(rawUrl);
         options
             .UseNpgsql(connectionString)
+            // Suppress type-mapping diff between MySQL snapshot and Npgsql provider
+            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
             .LogTo(Console.WriteLine, LogLevel.Error)
             .EnableDetailedErrors();
     }
