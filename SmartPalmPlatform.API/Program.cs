@@ -57,10 +57,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        // Render injects DATABASE_URL automatically when a PostgreSQL db is linked
-        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+        // Render provides DATABASE_URL as a URI (postgresql://user:pass@host/db)
+        // Npgsql requires key=value format, so we convert it
+        var rawUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? builder.Configuration.GetConnectionString("ProductionConnection")
             ?? throw new Exception("Production DB not configured. Set DATABASE_URL in Render.");
+        var connectionString = ParseDatabaseUrl(rawUrl);
         options
             .UseNpgsql(connectionString)
             .LogTo(Console.WriteLine, LogLevel.Error)
@@ -168,3 +170,16 @@ else
 }
 
 app.Run();
+
+// Converts postgresql://user:pass@host:port/db  →  Host=...;Username=...;Password=...;Database=...
+static string ParseDatabaseUrl(string databaseUrl)
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    var host = uri.Host;
+    var port = uri.Port > 0 ? uri.Port : 5432;
+    var database = uri.AbsolutePath.TrimStart('/');
+    var username = Uri.UnescapeDataString(userInfo[0]);
+    var password = Uri.UnescapeDataString(userInfo[1]);
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
+}
