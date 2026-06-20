@@ -4,8 +4,8 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 public static class ConnectiviyStatusQueryFromResourceAssembler
 {
-    public static ConnectiviyStatusQuery ToQueryFromResource(string serial)
+    public static ConnectiviyStatusQuery ToQueryFromResource(string edgeMac)
     {
-        return new ConnectiviyStatusQuery(serial);
+        return new ConnectiviyStatusQuery(edgeMac);
     }
 }

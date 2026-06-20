@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.IotDeviceManagement.Domain.Queries;
 
-public record ConnectiviyStatusQuery(string serial);
+public record ConnectiviyStatusQuery(string mac);

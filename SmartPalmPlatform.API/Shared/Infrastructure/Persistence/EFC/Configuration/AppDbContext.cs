@@ -1,6 +1,8 @@
 ﻿using EntityFrameworkCore.CreatedUpdatedDate.Extensions;
 using Microsoft.EntityFrameworkCore;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
@@ -28,6 +30,25 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         base.OnModelCreating(builder);
 
         // Iot Device Management Bounded Context Configuration
+
+        builder.Entity<EdgeDevice>().ToTable("edge_device");
+        builder.Entity<EdgeDevice>().HasKey(device => device.Id);
+        builder
+            .Entity<EdgeDevice>()
+            .Property(device => device.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+
+        builder.Entity<EdgeDevice>().HasIndex(device => device.MacAddress).IsUnique();
+        builder.Entity<EdgeDevice>().Property(device => device.MacAddress).IsRequired();
+        builder.Entity<EdgeDevice>().Property(device => device.MonitoringZoneId).IsRequired();
+        builder
+            .Entity<EdgeDevice>()
+            .Property(device => device.LastConnectivityCheckAt)
+            .IsRequired();
+        builder.Entity<EdgeDevice>().Property(device => device.LastSyncAt).IsRequired();
+        builder.Entity<EdgeDevice>().Property(device => device.CreatedAt).IsRequired();
+
         builder.Entity<IotDevice>().ToTable("iot_device");
         builder.Entity<IotDevice>().HasKey(device => device.Id);
         builder
@@ -36,25 +57,58 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .IsRequired()
             .ValueGeneratedOnAdd();
 
-        builder
-            .Entity<IotDevice>()
-            .OwnsOne(
-                device => device.Configuration,
-                config =>
-                {
-                    config.Property("IotDeviceId").HasColumnName("Id");
-                    config.Property(x => x.MaxOfflineStorageHours);
-                    config.Property(x => x.RetryPolicy);
-                    config.Property(x => x.TransmissionMode);
-                    config.Property(x => x.SamplingIntervalMinutes);
-                }
-            );
-        builder.Entity<IotDevice>().Property(device => device.SerialNumber).IsRequired();
-        builder.Entity<IotDevice>().Property(device => device.MonitoringZoneId).IsRequired();
-        builder.Entity<IotDevice>().Property(device => device.ActivationStatus).IsRequired();
-        builder.Entity<IotDevice>().Property(device => device.HealthStatus).IsRequired();
+        builder.Entity<IotDevice>().HasIndex(device => device.MacAddress).IsUnique();
+        builder.Entity<IotDevice>().Property(device => device.MacAddress).IsRequired();
+        builder.Entity<IotDevice>().Property(device => device.EdgeDeviceMacAddress).IsRequired();
         builder.Entity<IotDevice>().Property(device => device.CreatedAt).IsRequired();
-        builder.Entity<IotDevice>().Property(device => device.LastSyncAt).IsRequired();
+
+        builder.Entity<SensorReading>().ToTable("sensor_reading");
+        builder.Entity<SensorReading>().HasKey(reading => reading.Id);
+        builder
+            .Entity<SensorReading>()
+            .Property(reading => reading.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+        builder.Entity<SensorReading>().Property(reading => reading.SensorType).IsRequired();
+        builder.Entity<SensorReading>().Property(reading => reading.Value).IsRequired();
+        builder.Entity<SensorReading>().Property(reading => reading.Timestamp).IsRequired();
+
+        builder.Entity<EdgeRegistry>().ToTable("edge_registry");
+        builder.Entity<EdgeRegistry>().HasKey(registry => registry.Id);
+        builder
+            .Entity<EdgeRegistry>()
+            .Property(registry => registry.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+        builder.Entity<EdgeRegistry>().Property(registry => registry.EdgeMacAddress).IsRequired();
+        builder
+            .Entity<EdgeRegistry>()
+            .Property(registry => registry.IotDeviceMacAddresses)
+            .IsRequired();
+        builder.Entity<EdgeRegistry>().Property(registry => registry.CreatedAt).IsRequired();
+
+        builder.Entity<AgronomicThreshold>().ToTable("agronomic_thresholds");
+        builder.Entity<AgronomicThreshold>().HasKey(threshold => threshold.Id);
+        builder
+            .Entity<AgronomicThreshold>()
+            .Property(threshold => threshold.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+        builder
+            .Entity<AgronomicThreshold>()
+            .Property(threshold => threshold.EdgeDeviceMacAddress)
+            .IsRequired();
+        builder
+            .Entity<AgronomicThreshold>()
+            .Property(threshold => threshold.IotDeviceMacAddress)
+            .IsRequired();
+        builder.Entity<AgronomicThreshold>().Property(threshold => threshold.Min).IsRequired();
+        builder.Entity<AgronomicThreshold>().Property(threshold => threshold.Max).IsRequired();
+        builder
+            .Entity<AgronomicThreshold>()
+            .Property(threshold => threshold.Description)
+            .IsRequired();
+        builder.Entity<AgronomicThreshold>().Property(threshold => threshold.Type).IsRequired();
 
         // Apply IAM context configuration
         //builder.ApplyIamConfiguration();
