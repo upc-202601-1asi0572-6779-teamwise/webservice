@@ -4,7 +4,6 @@ using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Repositories;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
-using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.DomainServices;
 using SmartPalmPlatform.API.Shared.Domain.Events;
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 
@@ -15,8 +14,7 @@ public class DeviceStatusCommandService(
     IMediator mediator,
     IIotDeviceRepository iotDeviceRepository,
     IEdgeDeviceRepository edgeDeviceRepository,
-    IEdgeRegistryRepository edgeRegistryRepository,
-    IEdgeSynchronizationService edgeSynchronizationService
+    IEdgeRegistryRepository edgeRegistryRepository
 ) : IDeviceStatusCommandService
 {
     public async Task Handle(RegisterEdgeDeviceCommand command)
@@ -98,8 +96,6 @@ public class DeviceStatusCommandService(
         {
             throw new Exception("Device not found");
         }
-
-        var readings = edgeSynchronizationService.MapReadingsToChronologicalOrder(command.readings);
 
         await mediator.Publish(
             new IotDeviceSynchronizationEvent(device.MacAddress, command.readings)
