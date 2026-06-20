@@ -44,4 +44,60 @@ public class RecommendationRepository(AppDbContext context)
             .OrderByDescending(intervention => intervention.ExecutionDate)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdAsync(int agronomistId)
+    {
+        return await Context
+            .Set<Recommendation>()
+            .Where(recommendation => recommendation.AgronomistId == agronomistId)
+            .OrderByDescending(recommendation => recommendation.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdAndStatusAsync(
+        int agronomistId,
+        RecommendationStatus status
+    )
+    {
+        return await Context
+            .Set<Recommendation>()
+            .Where(recommendation =>
+                recommendation.AgronomistId == agronomistId && recommendation.Status == status
+            )
+            .OrderByDescending(recommendation => recommendation.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdAndPlantationIdAsync(
+        int agronomistId,
+        int plantationId
+    )
+    {
+        return await Context
+            .Set<Recommendation>()
+            .Where(recommendation =>
+                recommendation.AgronomistId == agronomistId
+                && recommendation.PlantationId == plantationId
+            )
+            .OrderByDescending(recommendation => recommendation.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdPlantationIdAndStatusAsync(
+        int agronomistId,
+        int plantationId,
+        RecommendationStatus status
+    )
+    {
+        return await Context
+            .Set<Recommendation>()
+            .Where(recommendation =>
+                recommendation.AgronomistId == agronomistId
+                && recommendation.PlantationId == plantationId
+                && recommendation.Status == status
+            )
+            .OrderByDescending(recommendation => recommendation.CreatedAt)
+            .ToListAsync();
+    }
 }
+
