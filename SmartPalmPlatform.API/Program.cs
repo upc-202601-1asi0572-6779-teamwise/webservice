@@ -23,7 +23,21 @@ using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Events
+// Detect production environment (Render sets PORT and RENDER env vars)
+var isProduction = builder.Environment.IsProduction()
+    || Environment.GetEnvironmentVariable("RENDER") != null
+    || Environment.GetEnvironmentVariable("PORT") != null;
+
+if (isProduction)
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+    Console.WriteLine($"Production mode - Port: {port}");
+}
+else
+{
+    Console.WriteLine("Development mode - http://localhost:5055");
+}
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -31,11 +45,10 @@ builder.Services.AddControllers();
 // Configure Database Context and Logging Levels
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    if (builder.Environment.IsDevelopment())
+    if (!isProduction)
     {
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        if (connectionString is null)
-            throw new Exception("Connection string not found");
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new Exception("DefaultConnection not found in appsettings.json");
         options
             .UseMySQL(connectionString)
             .LogTo(Console.WriteLine, LogLevel.Information)
@@ -44,9 +57,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        var connectionString = builder.Configuration.GetConnectionString("ProductionConnection");
-        if (connectionString is null)
-            throw new Exception("Connection string not found");
+        // Render injects DATABASE_URL automatically when a PostgreSQL db is linked
+        var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? builder.Configuration.GetConnectionString("ProductionConnection")
+            ?? throw new Exception("Production DB not configured. Set DATABASE_URL in Render.");
         options
             .UseNpgsql(connectionString)
             .LogTo(Console.WriteLine, LogLevel.Error)
@@ -91,16 +105,14 @@ builder.Services.AddMediatR(config =>
     config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
 });
 
-// CQRS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(
-        "AllowAll",
-        builder =>
-        {
-            builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-        }
-    );
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
 });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -121,25 +133,38 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (!isProduction)
 {
     app.MapOpenApi();
 }
 
-// add swagger
-// if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartPalm API V1");
+    c.RoutePrefix = string.Empty;
+});
 
 app.UseCors("AllowAll");
 
-// Add Authorization Middleware to Pipeline
-app.UseHttpsRedirection();
+// Render terminates TLS at the load balancer
+if (!isProduction)
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
-
 app.MapControllers();
+
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
+if (isProduction)
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    Console.WriteLine($"Swagger: http://0.0.0.0:{port}");
+}
+else
+{
+    Console.WriteLine("Swagger: http://localhost:5055/swagger");
+}
 
 app.Run();
