@@ -11,6 +11,8 @@ public static class SensorTypeFromStringAssembler
             "Humidity" => SensorType.Humidity,
             "PH" => SensorType.PH,
             "Luminosity" => SensorType.Luminosity,
+            "Temperature" => SensorType.Temperature,
+            "SoilMoisture" => SensorType.SoilMoisture,
             _ => throw new Exception("Sensor Type not found"),
         };
     }
