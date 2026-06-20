@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.QueryServices;
@@ -21,6 +23,10 @@ using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
 
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 // Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
 // This switch restores the pre-v6 behavior so Local datetimes are accepted.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -91,6 +97,11 @@ builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IEdgeDeviceRepository, EdgeDeviceRepository>();
 builder.Services.AddScoped<IEdgeRegistryRepository, EdgeRegistryRepository>();
 
+// Agronomic Recommendation Bounded Context Injection Configuration
+builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+builder.Services.AddScoped<IRecommendationCommandService, RecommendationCommandService>();
+builder.Services.AddScoped<IRecommendationQueryService, RecommendationQueryService>();
+
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
 builder.Services.AddScoped<IDeviceStatusQueryService, DeviceStatusQueryService>();
 builder.Services.AddScoped<IEdgeSynchronizationService, EdgeSynchronizationService>();
@@ -135,7 +146,43 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        logger.LogInformation("Checking for pending migrations...");
+        var migrationsAssembly = context.Database.GetService<IMigrationsAssembly>();
+        logger.LogInformation("Migrations Assembly: {AssemblyName}", migrationsAssembly.Assembly.FullName);
+        
+        // Log all assemblies to check if OsitoPolarPlatform.API is loaded
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        logger.LogInformation("Loaded assemblies: {Assemblies}", string.Join(", ", assemblies.Select(a => a.FullName)));
+
+        // Explicitly load migrations
+        var migrationIds = migrationsAssembly.Migrations.Keys.ToList();
+        logger.LogInformation("Detected migrations: {Migrations}", string.Join(", ", migrationIds));
+
+        var appliedMigrations = context.Database.GetAppliedMigrations().ToList();
+        var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+        logger.LogInformation("Applied migrations: {Applied}", string.Join(", ", appliedMigrations));
+        logger.LogInformation("Pending migrations: {Pending}", string.Join(", ", pendingMigrations));
+        
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("Applying migrations...");
+            context.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        else
+        {
+            logger.LogInformation("No pending migrations found.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error applying database migrations: {Message}", ex.Message);
+        throw;
+    }
 }
 
 // Configure the HTTP request pipeline.
