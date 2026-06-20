@@ -206,20 +206,29 @@ namespace SmartPalmPlatform.API.Migrations
                     b.ToTable("iot_devices", (string)null);
                 });
 
-            modelBuilder.Entity("SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities.SensorReading", b =>
+            modelBuilder.Entity("SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates.SensorReading", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnName("id");
 
-                    b.Property<int>("SensorType")
-                        .HasColumnType("int")
-                        .HasColumnName("sensor_type");
+                    b.Property<string>("EdgeDeviceMacAddress")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("edge_device_mac_address");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTime>("MeasuredAt")
                         .HasColumnType("datetime(6)")
-                        .HasColumnName("timestamp");
+                        .HasColumnName("measured_at");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int")
+                        .HasColumnName("type");
+
+                    b.Property<int>("Unit")
+                        .HasColumnType("int")
+                        .HasColumnName("unit");
 
                     b.Property<double>("Value")
                         .HasColumnType("double")

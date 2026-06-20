@@ -7,7 +7,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace SmartPalmPlatform.API.Migrations
 {
     /// <inheritdoc />
-    public partial class agrnomictrecommendations : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -111,9 +111,11 @@ namespace SmartPalmPlatform.API.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    sensor_type = table.Column<int>(type: "int", nullable: false),
-                    value = table.Column<double>(type: "double", nullable: false),
-                    timestamp = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    edge_device_mac_address = table.Column<string>(type: "longtext", nullable: false),
+                    measured_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    type = table.Column<int>(type: "int", nullable: false),
+                    unit = table.Column<int>(type: "int", nullable: false),
+                    value = table.Column<double>(type: "double", nullable: false)
                 },
                 constraints: table =>
                 {
