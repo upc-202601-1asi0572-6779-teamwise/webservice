@@ -21,6 +21,10 @@ using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
 
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 // Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
 // This switch restores the pre-v6 behavior so Local datetimes are accepted.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -90,6 +94,11 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IEdgeDeviceRepository, EdgeDeviceRepository>();
 builder.Services.AddScoped<IEdgeRegistryRepository, EdgeRegistryRepository>();
+
+// Agronomic Recommendation Bounded Context Injection Configuration
+builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+builder.Services.AddScoped<IRecommendationCommandService, RecommendationCommandService>();
+builder.Services.AddScoped<IRecommendationQueryService, RecommendationQueryService>();
 
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
 builder.Services.AddScoped<IDeviceStatusQueryService, DeviceStatusQueryService>();
