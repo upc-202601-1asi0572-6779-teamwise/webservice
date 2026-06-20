@@ -11,10 +11,13 @@ public static class StringFromSensorTypeAssembler
             SensorType.Temperature => "Temperature",
             SensorType.Humidity => "Humidity",
             SensorType.Pressure => "Pressure",
+            SensorType.Luminosity => "Luminosity",
             SensorType.GasResistance => "GasResistance",
             SensorType.Voltage => "Voltage",
             SensorType.Current => "Current",
             SensorType.Power => "Power",
+            SensorType.Speed => "Speed",
+            SensorType.Direction => "Direction",
             _ => "Unknown",
         };
     }

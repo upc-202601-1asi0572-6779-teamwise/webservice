@@ -19,6 +19,12 @@ public static class SensorReadingTypeFactory
                 return HumiditySensorReading(edgeDeviceMacAddress, measuredAt, value);
             case SensorType.PH:
                 return PHSensorReading(edgeDeviceMacAddress, measuredAt, value);
+            case SensorType.Luminosity:
+                return LuminositySensorReading(edgeDeviceMacAddress, measuredAt, value);
+            case SensorType.Temperature:
+                return TemperatureSensorReading(edgeDeviceMacAddress, measuredAt, value);
+            case SensorType.SoilMoisture:
+                return SoilMoistureSensorReading(edgeDeviceMacAddress, measuredAt, value);
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -49,6 +55,51 @@ public static class SensorReadingTypeFactory
             edgeDeviceMacAddress,
             measuredAt,
             SensorType.PH,
+            MeasureUnit.Unknown,
+            value
+        );
+    }
+
+    public static SensorReading LuminositySensorReading(
+        string edgeDeviceMacAddress,
+        DateTime measuredAt,
+        double value
+    )
+    {
+        return new SensorReading(
+            edgeDeviceMacAddress,
+            measuredAt,
+            SensorType.Luminosity,
+            MeasureUnit.Unknown,
+            value
+        );
+    }
+
+    public static SensorReading TemperatureSensorReading(
+        string edgeDeviceMacAddress,
+        DateTime measuredAt,
+        double value
+    )
+    {
+        return new SensorReading(
+            edgeDeviceMacAddress,
+            measuredAt,
+            SensorType.Temperature,
+            MeasureUnit.Unknown,
+            value
+        );
+    }
+
+    public static SensorReading SoilMoistureSensorReading(
+        string edgeDeviceMacAddress,
+        DateTime measuredAt,
+        double value
+    )
+    {
+        return new SensorReading(
+            edgeDeviceMacAddress,
+            measuredAt,
+            SensorType.SoilMoisture,
             MeasureUnit.Percent,
             value
         );
