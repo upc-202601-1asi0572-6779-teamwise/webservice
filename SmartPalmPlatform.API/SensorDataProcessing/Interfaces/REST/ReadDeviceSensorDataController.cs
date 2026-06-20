@@ -50,8 +50,8 @@ public class ReadDeviceSensorDataController(
         {
             var query = new SensorReadingQuery(
                 edgeMac,
-                from ?? DateTime.Now.AddHours(-24),
-                to ?? DateTime.Now
+                from ?? DateTime.SpecifyKind(DateTime.Now.AddHours(-24), DateTimeKind.Unspecified),
+                to ?? DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified)
             );
 
             var readings = await sensorReadingQueryService.Handle(query);
