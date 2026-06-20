@@ -1,12 +1,12 @@
 ﻿using EntityFrameworkCore.CreatedUpdatedDate.Extensions;
 using Microsoft.EntityFrameworkCore;
-using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
-using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
-using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
-using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
-
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Entities;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
+using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 
 namespace SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 
@@ -69,9 +69,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .Property(reading => reading.Id)
             .IsRequired()
             .ValueGeneratedOnAdd();
-        builder.Entity<SensorReading>().Property(reading => reading.SensorType).IsRequired();
+        builder.Entity<SensorReading>().Property(reading => reading.Type).IsRequired();
         builder.Entity<SensorReading>().Property(reading => reading.Value).IsRequired();
-        builder.Entity<SensorReading>().Property(reading => reading.Timestamp).IsRequired();
+        builder.Entity<SensorReading>().Property(reading => reading.MeasuredAt).IsRequired();
 
         builder.Entity<EdgeRegistry>().ToTable("edge_registry");
         builder.Entity<EdgeRegistry>().HasKey(registry => registry.Id);
@@ -113,7 +113,6 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         // Apply IAM context configuration
         //builder.ApplyIamConfiguration();
 
-
         // Agronomic Recommendation Bounded Context Configuration
         builder.Entity<Recommendation>().ToTable("recommendations");
         builder.Entity<Recommendation>().HasKey(recommendation => recommendation.Id);
@@ -123,8 +122,14 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .IsRequired()
             .ValueGeneratedOnAdd();
 
-        builder.Entity<Recommendation>().Property(recommendation => recommendation.PlantationId).IsRequired();
-        builder.Entity<Recommendation>().Property(recommendation => recommendation.AgronomistId).IsRequired();
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.PlantationId)
+            .IsRequired();
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.AgronomistId)
+            .IsRequired();
 
         builder
             .Entity<Recommendation>()
@@ -146,7 +151,10 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .HasConversion<string>()
             .HasMaxLength(20);
 
-        builder.Entity<Recommendation>().Property(recommendation => recommendation.CreatedAt).IsRequired();
+        builder
+            .Entity<Recommendation>()
+            .Property(recommendation => recommendation.CreatedAt)
+            .IsRequired();
         builder.Entity<Recommendation>().Property(recommendation => recommendation.ApprovedAt);
         builder.Entity<Recommendation>().Property(recommendation => recommendation.PublishedAt);
 

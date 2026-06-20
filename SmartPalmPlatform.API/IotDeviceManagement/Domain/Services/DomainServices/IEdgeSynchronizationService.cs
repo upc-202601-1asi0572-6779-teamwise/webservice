@@ -1,8 +1,8 @@
-using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
+using SmartPalmPlatform.API.Shared.Domain.Model.ValueObjects;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.DomainServices;
 
 public interface IEdgeSynchronizationService
 {
-    List<SensorReading> MapReadingsToChronologicalOrder(List<SensorReading> readings);
+    List<SensorReadingPayload> MapReadingsToChronologicalOrder(List<SensorReadingPayload> readings);
 }
