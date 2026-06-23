@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
 
@@ -7,15 +9,11 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [ApiController]
 [Route("api/v1/device")]
-public class ReadDeviceSensorDataController : ControllerBase
+public class ReadDeviceSensorDataController(
+    ISensorReadingCommandService sensorReadingCommandService,
+    ISensorReadingQueryService sensorReadingQueryService
+) : ControllerBase
 {
-    private readonly ISensorReadingCommandService _sensorReadingCommandService;
-
-    public ReadDeviceSensorDataController(ISensorReadingCommandService sensorReadingCommandService)
-    {
-        _sensorReadingCommandService = sensorReadingCommandService;
-    }
-
     [HttpPost("edge/{edgeMac}/digest")]
     public async Task<IActionResult> Post(
         [FromRoute] string edgeMac,
@@ -28,9 +26,38 @@ public class ReadDeviceSensorDataController : ControllerBase
                 edgeMac,
                 resource
             );
-            await _sensorReadingCommandService.Handle(command);
+            await sensorReadingCommandService.Handle(command);
 
             return Ok();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { message = e.Message }
+            );
+        }
+    }
+
+    [HttpGet("edge/{edgeMac}/readings")]
+    public async Task<IActionResult> GetReadings(
+        [FromRoute] string edgeMac,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to
+    )
+    {
+        try
+        {
+            var resolvedFrom = from ?? DateTime.MinValue;
+            var resolvedTo   = to   ?? DateTime.MaxValue;
+
+            var query = new SensorReadingQuery(edgeMac, resolvedFrom, resolvedTo);
+
+            var readings = await sensorReadingQueryService.Handle(query);
+            var response = SensorReadingViewResourceFromAggregateAssembler
+                .ToResourceListFromAggregateList(readings);
+
+            return Ok(response);
         }
         catch (Exception e)
         {

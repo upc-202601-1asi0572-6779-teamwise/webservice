@@ -116,6 +116,7 @@ builder.Services.AddScoped<ISensorReadingRepository, SensorReadingRepository>();
 builder.Services.AddScoped<IAgronomicThresholdRepository, AgronomicThresholdRepository>();
 
 builder.Services.AddScoped<ISensorReadingCommandService, SensorReadingCommandService>();
+builder.Services.AddScoped<ISensorReadingQueryService, SensorReadingQueryService>();
 builder.Services.AddScoped<IAgronomicThresholdQueryService, AgronomicThresholdQueryService>();
 builder.Services.AddScoped<IThresholdEvaluationService, ThresholdEvaluationService>();
 
