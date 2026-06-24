@@ -7,11 +7,10 @@ public static class CreateRecommendationCommandFromResourceAssembler
 {
     public static CreateRecommendationCommand ToCommandFromResource(
         int plantationId,
-        int agronomistId,
         CreateRecommendationResource resource
     )
     {
-        return new CreateRecommendationCommand(plantationId, agronomistId, resource.content);
+        return new CreateRecommendationCommand(plantationId, resource.agronomistId, resource.content);
     }
 }
 

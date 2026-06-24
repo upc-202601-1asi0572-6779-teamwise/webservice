@@ -10,47 +10,39 @@ namespace SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryService
 public class RecommendationQueryService(IRecommendationRepository recommendationRepository)
     : IRecommendationQueryService
 {
-    public async Task<IEnumerable<Recommendation>> Handle(
-        GetAgronomistPlantationRecommendationsQuery query
-    )
+    public async Task<IEnumerable<Recommendation>> Handle(GetPlantationRecommendationsQuery query)
     {
-        // TODO: validate if agronomist exists and if plantation exists
-        return await recommendationRepository.FindByAgronomistIdAndPlantationIdAsync(
-            query.AgronomistId,
-            query.PlantationId
-        );
-    }
+        if (query.Status is null && query.AgronomistId is null)
+            return await recommendationRepository.FindByPlantationIdAsync(query.PlantationId);
 
-    public async Task<Recommendation?> Handle(GetAgronomistPlantationRecomendationByIdQuery query)
-    {
-        // TODO: validate if agronomist exists, if plantation exists and if recommendation exists
-        return await recommendationRepository.FindByIdAsync(query.RecommendationId);
-    }
-
-    public async Task<IEnumerable<Recommendation>> Handle(
-        GetAgronomistPlantationRecommendationsByStatusQuery query
-    )
-    {
-        // TODO: validate if agronomist exists and if plantation exists
-
-        if (query.Status is null)
-            return await recommendationRepository.FindByAgronomistIdAndPlantationIdAsync(
-                query.AgronomistId,
-                query.PlantationId
+        if (query.Status is not null && query.AgronomistId is not null)
+            return await recommendationRepository.FindByPlantationIdAgronomistIdAndStatusAsync(
+                query.PlantationId,
+                query.AgronomistId.Value,
+                query.Status.Value
             );
 
-        return await recommendationRepository.FindByAgronomistIdPlantationIdAndStatusAsync(
-            query.AgronomistId,
+        if (query.AgronomistId is not null)
+            return await recommendationRepository.FindByPlantationIdAndAgronomistIdAsync(
+                query.PlantationId,
+                query.AgronomistId.Value
+            );
+
+        return await recommendationRepository.FindByPlantationIdAndStatusAsync(
             query.PlantationId,
-            query.Status.Value
+            query.Status!.Value
         );
+    }
+
+    public async Task<Recommendation?> Handle(GetRecommendationByIdQuery query)
+    {
+        return await recommendationRepository.FindByIdAsync(query.RecommendationId);
     }
 
     public async Task<IEnumerable<AgronomicIntervention>> Handle(
         GetInterventionsByRecommendationIdQuery query
     )
     {
-        // TODO: validate if agronomist exists, if plantation exists and if recommendation exists
         return await recommendationRepository.FindInterventionsByRecommendationIdAsync(
             query.RecommendationId
         );
