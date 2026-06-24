@@ -17,17 +17,22 @@ public interface IRecommendationRepository : IBaseRepository<Recommendation>
         int recommendationId
     );
 
-    Task<IEnumerable<Recommendation>> FindByAgronomistIdAndPlantationIdAsync(
-        int agronomistId,
-        int plantationId
-    );
-
-    Task<IEnumerable<Recommendation>> FindByAgronomistIdAsync(int agronomistId);
-
-    Task<IEnumerable<Recommendation>> FindByAgronomistIdPlantationIdAndStatusAsync(
-        int agronomistId,
+    Task<IEnumerable<Recommendation>> FindByPlantationIdAndStatusAsync(
         int plantationId,
         RecommendationStatus status
     );
+
+    Task<IEnumerable<Recommendation>> FindByPlantationIdAndAgronomistIdAsync(
+        int plantationId,
+        int agronomistId
+    );
+
+    Task<IEnumerable<Recommendation>> FindByPlantationIdAgronomistIdAndStatusAsync(
+        int plantationId,
+        int agronomistId,
+        RecommendationStatus status
+    );
+
+    Task<IEnumerable<Recommendation>> FindByAgronomistIdAsync(int agronomistId);
 }
 
