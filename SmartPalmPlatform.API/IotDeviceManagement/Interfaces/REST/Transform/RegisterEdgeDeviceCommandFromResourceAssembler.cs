@@ -6,14 +6,12 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 public static class RegisterEdgeDeviceCommandFromResourceAssembler
 {
     public static RegisterEdgeDeviceCommand ToCommandFromResource(
-        string edgeDeviceMac,
-        int monitoringZoneId,
         EdgeDeviceRegistrationResource resource
     )
     {
         return new RegisterEdgeDeviceCommand(
-            edgeDeviceMac,
-            monitoringZoneId,
+            resource.edgeMac,
+            resource.monitoringZoneId,
             resource.username,
             resource.password
         );
