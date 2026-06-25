@@ -15,7 +15,7 @@ public class ReadDeviceSensorDataController(
 ) : ControllerBase
 {
     [HttpPost("edge/{edgeMac}/digest")]
-    public async Task<IActionResult> Post(
+    public async Task<IActionResult> SubmitSensorReadings(
         [FromRoute] string edgeMac,
         [FromBody] ReadDeviceSensorsDataResource resource
     )
@@ -29,6 +29,10 @@ public class ReadDeviceSensorDataController(
             await sensorReadingCommandService.Handle(command);
 
             return Ok();
+        }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {

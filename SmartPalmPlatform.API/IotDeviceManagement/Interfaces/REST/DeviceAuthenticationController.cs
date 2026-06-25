@@ -30,6 +30,18 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 
                 return Created();
             }
+            catch (Exception e) when (e is UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = e.Message });
+            }
+            catch (Exception e) when (e is InvalidOperationException)
+            {
+                return Conflict(new { message = e.Message });
+            }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
+            }
             catch (Exception e)
             {
                 return StatusCode(
@@ -57,6 +69,18 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                 await deviceStatusCommandService.Handle(command);
 
                 return Created();
+            }
+            catch (Exception e) when (e is UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = e.Message });
+            }
+            catch (Exception e) when (e is InvalidOperationException)
+            {
+                return Conflict(new { message = e.Message });
+            }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {

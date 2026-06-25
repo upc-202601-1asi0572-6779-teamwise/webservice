@@ -14,7 +14,7 @@ public class AgronomicThresholdController(
 ) : ControllerBase
 {
     [HttpGet("edge/{edgeMac}/iot/{iotMac}/threshold")]
-    public async Task<IActionResult> Get([FromRoute] string edgeMac, [FromRoute] string iotMac)
+    public async Task<IActionResult> GetThreshold([FromRoute] string edgeMac, [FromRoute] string iotMac)
     {
         try
         {
@@ -32,6 +32,10 @@ public class AgronomicThresholdController(
 
             return Ok(response);
         }
+        catch (Exception e) when (e is KeyNotFoundException)
+        {
+            return NotFound(new { message = e.Message });
+        }
         catch (Exception e)
         {
             return StatusCode(
@@ -42,7 +46,7 @@ public class AgronomicThresholdController(
     }
 
     [HttpPut("edge/{edgeMac}/iot/{iotMac}/threshold")]
-    public async Task<IActionResult> Post(
+    public async Task<IActionResult> UpdateThreshold(
         [FromRoute] string edgeMac,
         [FromRoute] string iotMac,
         [FromBody] UpdateAgronomicThresholdResource resource
@@ -58,6 +62,14 @@ public class AgronomicThresholdController(
             await sensorReadingCommandService.Handle(command);
 
             return Ok();
+        }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (Exception e) when (e is KeyNotFoundException)
+        {
+            return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {

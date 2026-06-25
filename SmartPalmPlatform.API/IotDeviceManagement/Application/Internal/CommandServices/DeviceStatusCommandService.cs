@@ -19,20 +19,13 @@ public class DeviceStatusCommandService(
 {
     public async Task Handle(RegisterEdgeDeviceCommand command)
     {
-        // TODO: validate if adming user is making changes from IAM BC
+        // TODO: validate if admin user is making changes from IAM BC
         if (command.Username != "admin" || command.Password != "admin")
-        {
-            throw new Exception("Unauthorized");
-        }
+            throw new UnauthorizedAccessException("Invalid credentials.");
 
         var device = await edgeDeviceRepository.FindByMacAddress(command.EdgeDeviceMac);
         if (device is not null)
-        {
-            throw new Exception("Edge Device already registered");
-        }
-
-        // TODO: Validate monitoringZoneId command
-        //
+            throw new InvalidOperationException("Edge Device already registered.");
 
         device = new EdgeDevice(command.EdgeDeviceMac, command.MonitoringZoneId);
 
@@ -42,48 +35,33 @@ public class DeviceStatusCommandService(
 
     public async Task Handle(RegisterIotDeviceCommand command)
     {
-        // TODO: validate if adming user is making changes from IAM
+        // TODO: validate if admin user is making changes from IAM
         if (command.Username != "admin" || command.Password != "admin")
-        {
-            throw new Exception("Unauthorized");
-        }
+            throw new UnauthorizedAccessException("Invalid credentials.");
 
         var edgeDevice = await edgeDeviceRepository.FindByMacAddress(command.EdgeDeviceMac);
-
         if (edgeDevice is null)
-        {
-            throw new Exception("Edge Device not found");
-        }
+            throw new KeyNotFoundException("Edge Device not found.");
 
         var iotDevice = await iotDeviceRepository.FindByMacAddress(command.IotDeviceMac);
-
         if (iotDevice is not null)
-        {
-            throw new Exception("Iot Device already registered");
-        }
+            throw new InvalidOperationException("IoT Device already registered.");
 
         var registry = await edgeRegistryRepository.FindByEdgeAndIotMacAddresses(
             command.EdgeDeviceMac,
             command.IotDeviceMac
         );
-
         if (registry is not null)
-        {
-            throw new Exception("Iot Device already registered to Edge Device");
-        }
+            throw new InvalidOperationException("IoT Device already registered to this Edge Device.");
 
         registry = new EdgeRegistry(command.EdgeDeviceMac, command.IotDeviceMac);
-
         await edgeRegistryRepository.AddAsync(registry);
         await uow.CompleteAsync();
 
         var newIotDevice = new IotDevice(command.IotDeviceMac, command.EdgeDeviceMac);
-
         await iotDeviceRepository.AddAsync(newIotDevice);
         await uow.CompleteAsync();
 
-        System.Console.WriteLine("EDGE DEVICE: " + command.EdgeDeviceMac);
-        System.Console.WriteLine("IOT DEVICE: " + command.IotDeviceMac);
         await mediator.Publish(
             new IotDeviceRegisteredEvent(command.EdgeDeviceMac, command.IotDeviceMac)
         );
@@ -93,9 +71,7 @@ public class DeviceStatusCommandService(
     {
         var device = await edgeDeviceRepository.FindByMacAddress(command.EdgeDeviceMac);
         if (device is null)
-        {
-            throw new Exception("Device not found");
-        }
+            throw new KeyNotFoundException("Edge Device not found.");
 
         await mediator.Publish(
             new IotDeviceSynchronizationEvent(device.MacAddress, command.readings)
