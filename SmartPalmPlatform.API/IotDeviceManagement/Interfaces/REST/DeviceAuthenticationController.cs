@@ -5,30 +5,34 @@ using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
-    [Route("api/v1/device")]
+    [Route("api/v1/edges")]
     [ApiController]
     public class DeviceAuthenticationController(
         IDeviceStatusCommandService deviceStatusCommandService
     ) : ControllerBase
     {
-        [HttpPost("edge/{edgeMac}/zone/{monitoringZoneId}/auth/register")]
+        [HttpPost("")]
         public async Task<IActionResult> RegisterEdgeDevice(
-            [FromRoute] string edgeMac,
-            [FromRoute] int monitoringZoneId,
             [FromBody] EdgeDeviceRegistrationResource resource
         )
         {
             try
             {
                 var command = RegisterEdgeDeviceCommandFromResourceAssembler.ToCommandFromResource(
-                    edgeMac,
-                    monitoringZoneId,
                     resource
                 );
 
                 await deviceStatusCommandService.Handle(command);
 
-                return Created();
+                return Created($"/api/v1/edges/{resource.edgeMac}", null);
+            }
+            catch (Exception e) when (e is UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = e.Message });
+            }
+            catch (Exception e) when (e is InvalidOperationException)
+            {
+                return Conflict(new { message = e.Message });
             }
             catch (Exception e)
             {
@@ -39,9 +43,8 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpPost("edge/{edgeMac}/iot/{iotMac}/auth/register")]
+        [HttpPost("{edgeMac}/iot-devices")]
         public async Task<IActionResult> RegisterIotDevice(
-            [FromRoute] string iotMac,
             [FromRoute] string edgeMac,
             [FromBody] IotDeviceRegistrationResource resource
         )
@@ -50,13 +53,24 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             {
                 var command = RegisterIotDeviceCommandFromResourceAssembler.ToCommandFromResource(
                     edgeMac,
-                    iotMac,
                     resource
                 );
 
                 await deviceStatusCommandService.Handle(command);
 
-                return Created();
+                return Created($"/api/v1/edges/{edgeMac}/iot-devices/{resource.iotMac}", null);
+            }
+            catch (Exception e) when (e is UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = e.Message });
+            }
+            catch (Exception e) when (e is InvalidOperationException)
+            {
+                return Conflict(new { message = e.Message });
+            }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {

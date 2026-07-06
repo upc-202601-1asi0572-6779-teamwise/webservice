@@ -54,49 +54,44 @@ public class RecommendationRepository(AppDbContext context)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdAndStatusAsync(
-        int agronomistId,
-        RecommendationStatus status
-    )
-    {
-        return await Context
-            .Set<Recommendation>()
-            .Where(recommendation =>
-                recommendation.AgronomistId == agronomistId && recommendation.Status == status
-            )
-            .OrderByDescending(recommendation => recommendation.CreatedAt)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdAndPlantationIdAsync(
-        int agronomistId,
-        int plantationId
-    )
-    {
-        return await Context
-            .Set<Recommendation>()
-            .Where(recommendation =>
-                recommendation.AgronomistId == agronomistId
-                && recommendation.PlantationId == plantationId
-            )
-            .OrderByDescending(recommendation => recommendation.CreatedAt)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Recommendation>> FindByAgronomistIdPlantationIdAndStatusAsync(
-        int agronomistId,
+    public async Task<IEnumerable<Recommendation>> FindByPlantationIdAndStatusAsync(
         int plantationId,
         RecommendationStatus status
     )
     {
         return await Context
             .Set<Recommendation>()
-            .Where(recommendation =>
-                recommendation.AgronomistId == agronomistId
-                && recommendation.PlantationId == plantationId
-                && recommendation.Status == status
+            .Where(r => r.PlantationId == plantationId && r.Status == status)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Recommendation>> FindByPlantationIdAndAgronomistIdAsync(
+        int plantationId,
+        int agronomistId
+    )
+    {
+        return await Context
+            .Set<Recommendation>()
+            .Where(r => r.PlantationId == plantationId && r.AgronomistId == agronomistId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Recommendation>> FindByPlantationIdAgronomistIdAndStatusAsync(
+        int plantationId,
+        int agronomistId,
+        RecommendationStatus status
+    )
+    {
+        return await Context
+            .Set<Recommendation>()
+            .Where(r =>
+                r.PlantationId == plantationId
+                && r.AgronomistId == agronomistId
+                && r.Status == status
             )
-            .OrderByDescending(recommendation => recommendation.CreatedAt)
+            .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
 }

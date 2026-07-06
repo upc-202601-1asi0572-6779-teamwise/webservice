@@ -16,9 +16,7 @@ public class DeviceStatusQueryService(
         var device = await deviceRepository.FindByMacAddress(query.mac);
 
         if (device is null)
-        {
-            throw new Exception("Device not found");
-        }
+            throw new KeyNotFoundException("Edge Device not found.");
 
         return device;
     }
@@ -28,21 +26,15 @@ public class DeviceStatusQueryService(
         var edgeDevice = await deviceRepository.FindByMacAddress(query.EdgeDeviceMac);
 
         if (edgeDevice is null)
-        {
-            throw new Exception("Edge Device not found");
-        }
+            throw new KeyNotFoundException("Edge Device not found.");
 
         var registry = await edgeRegistryRepository.FindByEdgeMacAddress(query.EdgeDeviceMac);
 
         if (registry is null)
-        {
-            throw new Exception("Registry not found");
-        }
+            throw new KeyNotFoundException("Registry not found.");
 
         if (registry.Count == 0)
-        {
             return Tuple.Create(edgeDevice, new List<EdgeRegistry>());
-        }
 
         return Tuple.Create(edgeDevice, registry);
     }

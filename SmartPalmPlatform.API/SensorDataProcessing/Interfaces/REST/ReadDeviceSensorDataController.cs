@@ -8,14 +8,14 @@ using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [ApiController]
-[Route("api/v1/device")]
+[Route("api/v1/edges")]
 public class ReadDeviceSensorDataController(
     ISensorReadingCommandService sensorReadingCommandService,
     ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
-    [HttpPost("edge/{edgeMac}/digest")]
-    public async Task<IActionResult> Post(
+    [HttpPost("{edgeMac}/sensor-readings")]
+    public async Task<IActionResult> SubmitSensorReadings(
         [FromRoute] string edgeMac,
         [FromBody] ReadDeviceSensorsDataResource resource
     )
@@ -30,6 +30,10 @@ public class ReadDeviceSensorDataController(
 
             return Ok();
         }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
+        }
         catch (Exception e)
         {
             return StatusCode(
@@ -39,8 +43,8 @@ public class ReadDeviceSensorDataController(
         }
     }
 
-    [HttpGet("edge/{edgeMac}/readings")]
-    public async Task<IActionResult> GetReadings(
+    [HttpGet("{edgeMac}/sensor-readings")]
+    public async Task<IActionResult> GetSensorReadings(
         [FromRoute] string edgeMac,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to

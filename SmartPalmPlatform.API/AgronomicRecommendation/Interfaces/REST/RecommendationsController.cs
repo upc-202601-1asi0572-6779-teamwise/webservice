@@ -1,38 +1,34 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Commands;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Transform;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST;
 
-[Route("api/v1")]
+[Route("api/v1/plantations")]
+[Produces(MediaTypeNames.Application.Json)]
 [ApiController]
 public class RecommendationsController(
     IRecommendationCommandService recommendationCommandService,
     IRecommendationQueryService recommendationQueryService
 ) : ControllerBase
 {
-    [HttpGet(
-        "agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations/{recommendationId:int}"
-    )]
+    [HttpGet("{plantationId:int}/recommendations/{recommendationId:int}")]
     public async Task<IActionResult> GetRecommendationById(
-        [FromRoute] int agronomistId,
         [FromRoute] int plantationId,
         [FromRoute] int recommendationId
     )
     {
         try
         {
-            var query = new GetAgronomistPlantationRecomendationByIdQuery(
-                agronomistId,
-                plantationId,
-                recommendationId
-            );
+            var query = new GetRecommendationByIdQuery(recommendationId);
             var recommendation = await recommendationQueryService.Handle(query);
 
-            if (recommendation is null)
+            if (recommendation is null || recommendation.PlantationId != plantationId)
                 return NotFound(new { message = "Recommendation not found." });
 
             var resource = RecommendationResourceFromEntityAssembler.ToResourceFromEntity(
@@ -50,21 +46,20 @@ public class RecommendationsController(
         }
     }
 
-    [HttpGet("agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations")]
-    public async Task<IActionResult> GetPendingRecommendations(
-        [FromRoute] int agronomistId,
+    [HttpGet("{plantationId:int}/recommendations")]
+    public async Task<IActionResult> GetRecommendations(
         [FromRoute] int plantationId,
-        [FromQuery] string? status
+        [FromQuery] string? status,
+        [FromQuery] int? agronomistId
     )
     {
         try
         {
-            var query =
-                GetAgranomistPlantationRecomendationsByStatusFromResourceAssembler.ToQueryFromResource(
-                    agronomistId,
-                    plantationId,
-                    status
-                );
+            var query = GetPlantationRecommendationsFromResourceAssembler.ToQueryFromResource(
+                plantationId,
+                status,
+                agronomistId
+            );
             var recommendations = await recommendationQueryService.Handle(query);
 
             var resources = recommendations.Select(
@@ -72,6 +67,10 @@ public class RecommendationsController(
             );
 
             return Ok(resources);
+        }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
@@ -82,9 +81,8 @@ public class RecommendationsController(
         }
     }
 
-    [HttpPost("agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations")]
+    [HttpPost("{plantationId:int}/recommendations")]
     public async Task<IActionResult> CreateRecommendation(
-        [FromRoute] int agronomistId,
         [FromRoute] int plantationId,
         [FromBody] CreateRecommendationResource resource
     )
@@ -93,7 +91,47 @@ public class RecommendationsController(
         {
             var command = CreateRecommendationCommandFromResourceAssembler.ToCommandFromResource(
                 plantationId,
-                agronomistId,
+                resource
+            );
+
+            var recommendation = await recommendationCommandService.Handle(command);
+
+            var response = RecommendationResourceFromEntityAssembler.ToResourceFromEntity(
+                recommendation
+            );
+
+            return Created(
+                $"/api/v1/plantations/{plantationId}/recommendations/{recommendation.Id}",
+                response
+            );
+        }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (Exception e)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
+        }
+    }
+
+    [HttpPatch("{plantationId:int}/recommendations/{recommendationId:int}")]
+    public async Task<IActionResult> UpdateRecommendationContent(
+        [FromRoute] int plantationId,
+        [FromRoute] int recommendationId,
+        [FromBody] UpdateRecommendationContentResource resource
+    )
+    {
+        try
+        {
+            var existing = await recommendationQueryService.Handle(
+                new GetRecommendationByIdQuery(recommendationId)
+            );
+            if (existing is null || existing.PlantationId != plantationId)
+                return NotFound(new { message = "Recommendation not found." });
+
+            var command = UpdateRecommendationContentCommandFromResourceAssembler.ToCommandFromResource(
+                recommendationId,
                 resource
             );
 
@@ -105,62 +143,35 @@ public class RecommendationsController(
 
             return Ok(response);
         }
-        catch (Exception e)
+        catch (Exception e) when (e is ArgumentException)
         {
             return BadRequest(new { message = e.Message });
         }
-    }
-
-    [HttpPut(
-        "agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations/{recommendationId:int}"
-    )]
-    public async Task<IActionResult> UpdateRecommendationContent(
-        [FromRoute] int agronomistId,
-        [FromRoute] int plantationId,
-        [FromRoute] int recommendationId,
-        [FromBody] UpdateRecommendationContentResource resource
-    )
-    {
-        try
+        catch (Exception e) when (e is InvalidOperationException)
         {
-            var command =
-                UpdateRecommendationContentCommandFromResourceAssembler.ToCommandFromResource(
-                    agronomistId,
-                    plantationId,
-                    recommendationId,
-                    resource
-                );
-
-            var recommendation = await recommendationCommandService.Handle(command);
-
-            var response = RecommendationResourceFromEntityAssembler.ToResourceFromEntity(
-                recommendation
-            );
-
-            return Ok(response);
+            return Conflict(new { message = e.Message });
         }
         catch (Exception e)
         {
-            return BadRequest(new { message = e.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
 
-    [HttpPatch(
-        "agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations/{recommendationId:int}/aproval"
-    )]
+    [HttpPatch("{plantationId:int}/recommendations/{recommendationId:int}/approval")]
     public async Task<IActionResult> ApproveRecommendation(
-        [FromRoute] int agronomistId,
         [FromRoute] int plantationId,
         [FromRoute] int recommendationId
     )
     {
         try
         {
-            var command = new ApproveRecommendationCommand(
-                agronomistId,
-                plantationId,
-                recommendationId
+            var existing = await recommendationQueryService.Handle(
+                new GetRecommendationByIdQuery(recommendationId)
             );
+            if (existing is null || existing.PlantationId != plantationId)
+                return NotFound(new { message = "Recommendation not found." });
+
+            var command = new ApproveRecommendationCommand(recommendationId);
             var recommendation = await recommendationCommandService.Handle(command);
 
             var response = RecommendationResourceFromEntityAssembler.ToResourceFromEntity(
@@ -169,28 +180,31 @@ public class RecommendationsController(
 
             return Ok(response);
         }
+        catch (Exception e) when (e is InvalidOperationException)
+        {
+            return Conflict(new { message = e.Message });
+        }
         catch (Exception e)
         {
-            return BadRequest(new { message = e.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
 
-    [HttpPatch(
-        "agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations/{recommendationId:int}/publishing"
-    )]
+    [HttpPatch("{plantationId:int}/recommendations/{recommendationId:int}/publication")]
     public async Task<IActionResult> PublishRecommendation(
-        [FromRoute] int agronomistId,
         [FromRoute] int plantationId,
         [FromRoute] int recommendationId
     )
     {
         try
         {
-            var command = new PublishRecommendationCommand(
-                agronomistId,
-                plantationId,
-                recommendationId
+            var existing = await recommendationQueryService.Handle(
+                new GetRecommendationByIdQuery(recommendationId)
             );
+            if (existing is null || existing.PlantationId != plantationId)
+                return NotFound(new { message = "Recommendation not found." });
+
+            var command = new PublishRecommendationCommand(recommendationId);
             var recommendation = await recommendationCommandService.Handle(command);
 
             var response = RecommendationResourceFromEntityAssembler.ToResourceFromEntity(
@@ -199,17 +213,25 @@ public class RecommendationsController(
 
             return Ok(response);
         }
+        catch (Exception e) when (e is InvalidOperationException)
+        {
+            return Conflict(new { message = e.Message });
+        }
         catch (Exception e)
         {
-            return BadRequest(new { message = e.Message });
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
 
-    [HttpPost(
-        "agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations/{recommendationId:int}/interventions"
-    )]
+    [HttpPost("{plantationId:int}/recommendations/{recommendationId:int}/interventions")]
+    [SwaggerOperation(
+        Summary = "Registers an agronomic intervention for a specific recommendation.",
+        Description = "This endpoint allows the registration of an agronomic intervention associated with a specific recommendation within a plantation. The intervention details are provided in the request body.",
+        OperationId = "RegisterIntervention")]
+    [SwaggerResponse(StatusCodes.Status201Created, "Intervention created", typeof(RegisterAgronomicInterventionResource), ContentTypes = new []{"application/json"})]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Intervention not created. Invalid request.", typeof(string), ContentTypes = new []{"application/json"})]
+    
     public async Task<IActionResult> RegisterIntervention(
-        [FromRoute] int agronomistId,
         [FromRoute] int plantationId,
         [FromRoute] int recommendationId,
         [FromBody] RegisterAgronomicInterventionResource resource
@@ -217,13 +239,16 @@ public class RecommendationsController(
     {
         try
         {
-            var command =
-                RegisterAgronomicInterventionCommandFromResourceAssembler.ToCommandFromResource(
-                    agronomistId,
-                    plantationId,
-                    recommendationId,
-                    resource
-                );
+            var existing = await recommendationQueryService.Handle(
+                new GetRecommendationByIdQuery(recommendationId)
+            );
+            if (existing is null || existing.PlantationId != plantationId)
+                return NotFound(new { message = "Recommendation not found." });
+
+            var command = RegisterAgronomicInterventionCommandFromResourceAssembler.ToCommandFromResource(
+                recommendationId,
+                resource
+            );
 
             var intervention = await recommendationCommandService.Handle(command);
 
@@ -231,30 +256,40 @@ public class RecommendationsController(
                 intervention
             );
 
-            return Ok(response);
+            return Created(
+                $"/api/v1/plantations/{plantationId}/recommendations/{recommendationId}/interventions/{intervention.Id}",
+                response
+            );
         }
-        catch (Exception e)
+        catch (Exception e) when (e is ArgumentException)
         {
             return BadRequest(new { message = e.Message });
         }
+        catch (Exception e) when (e is InvalidOperationException)
+        {
+            return Conflict(new { message = e.Message });
+        }
+        catch (Exception e)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
+        }
     }
 
-    [HttpGet(
-        "agronomist/{agronomistId:int}/plantation/{plantationId:int}/recomendations/{recommendationId:int}/interventions"
-    )]
+    [HttpGet("{plantationId:int}/recommendations/{recommendationId:int}/interventions")]
     public async Task<IActionResult> GetInterventionsByRecommendationId(
-        [FromRoute] int agronomistId,
         [FromRoute] int plantationId,
         [FromRoute] int recommendationId
     )
     {
         try
         {
-            var query = new GetInterventionsByRecommendationIdQuery(
-                agronomistId,
-                plantationId,
-                recommendationId
+            var existing = await recommendationQueryService.Handle(
+                new GetRecommendationByIdQuery(recommendationId)
             );
+            if (existing is null || existing.PlantationId != plantationId)
+                return NotFound(new { message = "Recommendation not found." });
+
+            var query = new GetInterventionsByRecommendationIdQuery(recommendationId);
             var interventions = await recommendationQueryService.Handle(query);
 
             var resources = interventions.Select(
@@ -272,4 +307,3 @@ public class RecommendationsController(
         }
     }
 }
-

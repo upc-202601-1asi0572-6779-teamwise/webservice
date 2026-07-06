@@ -1,8 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.QueryServices;
@@ -154,37 +152,35 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        logger.LogInformation("Checking for pending migrations...");
-        var migrationsAssembly = context.Database.GetService<IMigrationsAssembly>();
-        logger.LogInformation("Migrations Assembly: {AssemblyName}", migrationsAssembly.Assembly.FullName);
-        
-        // Log all assemblies to check if OsitoPolarPlatform.API is loaded
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-        logger.LogInformation("Loaded assemblies: {Assemblies}", string.Join(", ", assemblies.Select(a => a.FullName)));
-
-        // Explicitly load migrations
-        var migrationIds = migrationsAssembly.Migrations.Keys.ToList();
-        logger.LogInformation("Detected migrations: {Migrations}", string.Join(", ", migrationIds));
-
-        var appliedMigrations = context.Database.GetAppliedMigrations().ToList();
-        var pendingMigrations = context.Database.GetPendingMigrations().ToList();
-        logger.LogInformation("Applied migrations: {Applied}", string.Join(", ", appliedMigrations));
-        logger.LogInformation("Pending migrations: {Pending}", string.Join(", ", pendingMigrations));
-        
-        if (pendingMigrations.Any())
+        if (isProduction)
         {
-            logger.LogInformation("Applying migrations...");
-            context.Database.Migrate();
-            logger.LogInformation("Database migrations applied successfully.");
+            // Production (PostgreSQL): apply migrations from the migration file
+            var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+            logger.LogInformation("Pending migrations: {Pending}", string.Join(", ", pendingMigrations));
+
+            if (pendingMigrations.Any())
+            {
+                logger.LogInformation("Applying migrations...");
+                context.Database.Migrate();
+                logger.LogInformation("Database migrations applied successfully.");
+            }
+            else
+            {
+                logger.LogInformation("No pending migrations found.");
+            }
         }
         else
         {
-            logger.LogInformation("No pending migrations found.");
+            // Development (MySQL): EnsureCreated derives schema from the model using MySQL types,
+            // bypassing the PostgreSQL-typed migration file.
+            logger.LogInformation("Development mode: creating MySQL schema from model...");
+            context.Database.EnsureCreated();
+            logger.LogInformation("Database schema ready.");
         }
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error applying database migrations: {Message}", ex.Message);
+        logger.LogError(ex, "Error applying database schema: {Message}", ex.Message);
         throw;
     }
 }

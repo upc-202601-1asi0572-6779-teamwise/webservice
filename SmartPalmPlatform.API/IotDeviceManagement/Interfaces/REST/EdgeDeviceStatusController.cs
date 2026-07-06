@@ -6,17 +6,17 @@ using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
-    [Route("api/v1/device")]
+    [Route("api/v1/edges")]
     [ApiController]
     public class DeviceStatusController(
         IDeviceStatusCommandService deviceStatusCommandService,
         IDeviceStatusQueryService deviceStatusQueryService
     ) : ControllerBase
     {
-        [HttpPost("edge/{edgeMac}/digest/reconect")]
-        public async Task<IActionResult> RestoreEdgeDevice(
+        [HttpPost("{edgeMac}/synchronizations")]
+        public async Task<IActionResult> SynchronizeEdge(
             [FromRoute] string edgeMac,
-            EdgeSynchronizationResource resource
+            [FromBody] EdgeSynchronizationResource resource
         )
         {
             try
@@ -28,6 +28,14 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                 await deviceStatusCommandService.Handle(command);
                 return Ok();
             }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
+            }
+            catch (Exception e) when (e is ArgumentException)
+            {
+                return BadRequest(new { message = e.Message });
+            }
             catch (Exception e)
             {
                 return StatusCode(
@@ -37,7 +45,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpGet("edge/{edgeMac}/status/connectivity")]
+        [HttpGet("{edgeMac}/connectivity")]
         public async Task<IActionResult> GetConnectivityStatus([FromRoute] string edgeMac)
         {
             try
@@ -54,6 +62,10 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 
                 return Ok(response);
             }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
+            }
             catch (Exception e)
             {
                 return StatusCode(
@@ -63,7 +75,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpGet("edge/{edgeMac}/registry")]
+        [HttpGet("{edgeMac}/registry")]
         public async Task<IActionResult> GetDeviceRegistry([FromRoute] string edgeMac)
         {
             try
@@ -78,6 +90,10 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                     );
 
                 return Ok(response);
+            }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {

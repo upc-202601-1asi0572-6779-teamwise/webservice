@@ -2,8 +2,8 @@ using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Enums;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 
-public record GetAgronomistPlantationRecommendationsByStatusQuery(
-    int AgronomistId,
+public record GetPlantationRecommendationsQuery(
     int PlantationId,
-    RecommendationStatus? Status
+    RecommendationStatus? Status = null,
+    int? AgronomistId = null
 );

@@ -13,7 +13,7 @@ public static class SensorTypeFromStringAssembler
             "Luminosity" => SensorType.Luminosity,
             "Temperature" => SensorType.Temperature,
             "SoilMoisture" => SensorType.SoilMoisture,
-            _ => throw new Exception("Sensor Type not found"),
+            _ => throw new ArgumentException($"Unknown sensor type: '{sensorType}'."),
         };
     }
 }
