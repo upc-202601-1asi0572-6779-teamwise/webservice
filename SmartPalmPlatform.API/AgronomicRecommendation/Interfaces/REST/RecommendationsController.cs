@@ -1,13 +1,16 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Commands;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Transform;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST;
 
 [Route("api/v1/plantations")]
+[Produces(MediaTypeNames.Application.Json)]
 [ApiController]
 public class RecommendationsController(
     IRecommendationCommandService recommendationCommandService,
@@ -221,6 +224,13 @@ public class RecommendationsController(
     }
 
     [HttpPost("{plantationId:int}/recommendations/{recommendationId:int}/interventions")]
+    [SwaggerOperation(
+        Summary = "Registers an agronomic intervention for a specific recommendation.",
+        Description = "This endpoint allows the registration of an agronomic intervention associated with a specific recommendation within a plantation. The intervention details are provided in the request body.",
+        OperationId = "RegisterIntervention")]
+    [SwaggerResponse(StatusCodes.Status201Created, "Intervention created", typeof(RegisterAgronomicInterventionResource), ContentTypes = new []{"application/json"})]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Intervention not created. Invalid request.", typeof(string), ContentTypes = new []{"application/json"})]
+    
     public async Task<IActionResult> RegisterIntervention(
         [FromRoute] int plantationId,
         [FromRoute] int recommendationId,
