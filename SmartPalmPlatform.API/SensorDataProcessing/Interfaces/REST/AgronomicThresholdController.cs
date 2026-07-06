@@ -7,14 +7,17 @@ using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [ApiController]
-[Route("api/v1/device")]
+[Route("api/v1/edges")]
 public class AgronomicThresholdController(
     ISensorReadingCommandService sensorReadingCommandService,
     IAgronomicThresholdQueryService agronomicThresholdQueryService
 ) : ControllerBase
 {
-    [HttpGet("edge/{edgeMac}/iot/{iotMac}/threshold")]
-    public async Task<IActionResult> Get([FromRoute] string edgeMac, [FromRoute] string iotMac)
+    [HttpGet("{edgeMac}/iot-devices/{iotMac}/thresholds")]
+    public async Task<IActionResult> GetThreshold(
+        [FromRoute] string edgeMac,
+        [FromRoute] string iotMac
+    )
     {
         try
         {
@@ -32,6 +35,10 @@ public class AgronomicThresholdController(
 
             return Ok(response);
         }
+        catch (Exception e) when (e is KeyNotFoundException)
+        {
+            return NotFound(new { message = e.Message });
+        }
         catch (Exception e)
         {
             return StatusCode(
@@ -41,8 +48,8 @@ public class AgronomicThresholdController(
         }
     }
 
-    [HttpPut("edge/{edgeMac}/iot/{iotMac}/threshold")]
-    public async Task<IActionResult> Post(
+    [HttpPatch("{edgeMac}/iot-devices/{iotMac}/thresholds")]
+    public async Task<IActionResult> UpdateThreshold(
         [FromRoute] string edgeMac,
         [FromRoute] string iotMac,
         [FromBody] UpdateAgronomicThresholdResource resource
@@ -58,6 +65,14 @@ public class AgronomicThresholdController(
             await sensorReadingCommandService.Handle(command);
 
             return Ok();
+        }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (Exception e) when (e is KeyNotFoundException)
+        {
+            return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {

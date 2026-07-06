@@ -7,13 +7,12 @@ public static class RegisterIotDeviceCommandFromResourceAssembler
 {
     public static RegisterIotDeviceCommand ToCommandFromResource(
         string edgeDeviceMac,
-        string iotDeviceMac,
         IotDeviceRegistrationResource resource
     )
     {
         return new RegisterIotDeviceCommand(
             edgeDeviceMac,
-            iotDeviceMac,
+            resource.iotMac,
             resource.username,
             resource.password
         );
