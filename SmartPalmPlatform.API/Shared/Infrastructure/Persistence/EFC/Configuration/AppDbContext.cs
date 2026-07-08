@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Entities;
+using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates;
@@ -42,6 +43,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         builder.Entity<EdgeDevice>().HasIndex(device => device.MacAddress).IsUnique();
         builder.Entity<EdgeDevice>().Property(device => device.MacAddress).IsRequired();
         builder.Entity<EdgeDevice>().Property(device => device.MonitoringZoneId).IsRequired();
+        builder.Entity<EdgeDevice>().Property(device => device.UserId).IsRequired();
         builder
             .Entity<EdgeDevice>()
             .Property(device => device.LastConnectivityCheckAt)
@@ -117,8 +119,21 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             .IsRequired();
         builder.Entity<AgronomicThreshold>().Property(threshold => threshold.Type).IsRequired();
 
+        builder.Entity<KnownEdgeGateway>().ToTable("known_edge_gateways");
+        builder.Entity<KnownEdgeGateway>().HasKey(gateway => gateway.Id);
+        builder
+            .Entity<KnownEdgeGateway>()
+            .Property(gateway => gateway.Id)
+            .IsRequired()
+            .ValueGeneratedOnAdd();
+        builder.Entity<KnownEdgeGateway>().HasIndex(gateway => gateway.EdgeDeviceMacAddress).IsUnique();
+        builder
+            .Entity<KnownEdgeGateway>()
+            .Property(gateway => gateway.EdgeDeviceMacAddress)
+            .IsRequired();
+
         // Apply IAM context configuration
-        //builder.ApplyIamConfiguration();
+        builder.ApplyIamConfiguration();
 
         // Agronomic Recommendation Bounded Context Configuration
         builder.Entity<Recommendation>().ToTable("recommendations");

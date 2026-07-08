@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 
@@ -10,9 +11,11 @@ using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 namespace SmartPalmPlatform.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708141236_AddKnownEdgeGateways")]
+    partial class AddKnownEdgeGateways
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,50 +113,6 @@ namespace SmartPalmPlatform.API.Migrations
                     b.ToTable("agronomic_interventions", (string)null);
                 });
 
-            modelBuilder.Entity("SmartPalmPlatform.API.IAM.Domain.Model.Aggregates.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("CreatedDate")
-                        .HasColumnType("datetime")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("password_hash");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("role");
-
-                    b.Property<int?>("SubscriptionId")
-                        .HasColumnType("int")
-                        .HasColumnName("subscription_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedDate")
-                        .HasColumnType("datetime")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("username");
-
-                    b.HasKey("Id")
-                        .HasName("p_k_users");
-
-                    b.HasIndex("Username")
-                        .IsUnique()
-                        .HasDatabaseName("i_x_users_username");
-
-                    b.ToTable("users", (string)null);
-                });
-
             modelBuilder.Entity("SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates.EdgeDevice", b =>
                 {
                     b.Property<int>("Id")
@@ -181,10 +140,6 @@ namespace SmartPalmPlatform.API.Migrations
                     b.Property<int>("MonitoringZoneId")
                         .HasColumnType("int")
                         .HasColumnName("monitoring_zone_id");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("p_k_edge_devices");
