@@ -19,10 +19,6 @@ public class DeviceStatusCommandService(
 {
     public async Task Handle(RegisterEdgeDeviceCommand command)
     {
-        // TODO: validate if admin user is making changes from IAM BC
-        if (command.Username != "admin" || command.Password != "admin")
-            throw new UnauthorizedAccessException("Invalid credentials.");
-
         var device = await edgeDeviceRepository.FindByMacAddress(command.EdgeDeviceMac);
         if (device is not null)
             throw new InvalidOperationException("Edge Device already registered.");
@@ -35,10 +31,6 @@ public class DeviceStatusCommandService(
 
     public async Task Handle(RegisterIotDeviceCommand command)
     {
-        // TODO: validate if admin user is making changes from IAM
-        if (command.Username != "admin" || command.Password != "admin")
-            throw new UnauthorizedAccessException("Invalid credentials.");
-
         var edgeDevice = await edgeDeviceRepository.FindByMacAddress(command.EdgeDeviceMac);
         if (edgeDevice is null)
             throw new KeyNotFoundException("Edge Device not found.");
@@ -58,7 +50,7 @@ public class DeviceStatusCommandService(
         await edgeRegistryRepository.AddAsync(registry);
         await uow.CompleteAsync();
 
-        var newIotDevice = new IotDevice(command.IotDeviceMac, command.EdgeDeviceMac);
+        var newIotDevice = new IotDevice(command.EdgeDeviceMac, command.IotDeviceMac);
         await iotDeviceRepository.AddAsync(newIotDevice);
         await uow.CompleteAsync();
 

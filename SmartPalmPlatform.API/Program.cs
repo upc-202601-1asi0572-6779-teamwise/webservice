@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
@@ -26,6 +25,32 @@ using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.EventHandlers;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.OutboundServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Repositories;
+using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Firebase.Services;
+using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.IAM.Domain.Repositories;
+using SmartPalmPlatform.API.IAM.Domain.Services;
+using SmartPalmPlatform.API.IAM.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.IAM.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.IAM.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.IAM.Infrastructure.Hashing.BCrypt.Services;
+using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Configuration;
+using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Services;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL.Services;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Extensions;
 // Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
 // This switch restores the pre-v6 behavior so Local datetimes are accepted.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -91,6 +116,25 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 // Injection Configuration
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// // IAM Bounded Context
+
+// Injection Configuration
+builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+builder.Services.AddScoped<IHashingService, HashingService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserCommandService, UserCommandService>();
+builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<ISubscriptionCommandService, SubscriptionCommandService>();
+builder.Services.AddScoped<IPaymentCommandService, PaymentCommandService>();
+builder.Services.AddScoped<ISubscriptionQueryService, SubscriptionQueryService>();
+builder.Services.AddScoped<IPaymentQueryService, PaymentQueryService>();
+builder.Services.AddScoped<ISubscriptionLifecycleDomainService, SubscriptionLifecycleDomainService>();
+builder.Services.AddScoped<IPaymentStrategy, LocalPaymentStrategy>();
+builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
+
 // //  IoT Device Bounded Context
 
 // Injection Configuration
@@ -118,10 +162,21 @@ builder.Services.AddScoped<ISensorReadingQueryService, SensorReadingQueryService
 builder.Services.AddScoped<IAgronomicThresholdQueryService, AgronomicThresholdQueryService>();
 builder.Services.AddScoped<IThresholdEvaluationService, ThresholdEvaluationService>();
 
+// // Alerts & Notifications Bounded Context
+builder.Services.AddScoped<IAlertRepository, AlertRepository>();
+builder.Services.AddScoped<IUserAlertSettingRepository, UserAlertSettingRepository>();
+builder.Services.AddScoped<IAlertCommandService, AlertCommandService>();
+builder.Services.AddScoped<IAlertQueryService, AlertQueryService>();
+builder.Services.AddScoped<IUserAlertSettingCommandService, UserAlertSettingCommandService>();
+builder.Services.AddScoped<IUserAlertSettingQueryService, UserAlertSettingQueryService>();
+builder.Services.AddScoped<AlertClassificationService>();
+builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
+
 // Event Handlers
 builder.Services.AddMediatR(config =>
 {
     config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
+    config.RegisterServicesFromAssemblyContaining(typeof(ThresholdExceededEventHandler));
 });
 
 builder.Services.AddCors(options =>
@@ -206,6 +261,7 @@ if (!isProduction)
     app.UseHttpsRedirection();
 }
 
+app.UseRequestAuthorization();
 app.UseAuthorization();
 app.MapControllers();
 

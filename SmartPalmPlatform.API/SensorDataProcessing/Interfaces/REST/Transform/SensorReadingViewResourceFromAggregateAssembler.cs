@@ -8,7 +8,6 @@ public static class SensorReadingViewResourceFromAggregateAssembler
     public static SensorReadingViewResource ToResourceFromAggregate(SensorReading reading)
     {
         return new SensorReadingViewResource(
-            reading.Id,
             reading.EdgeDeviceMacAddress,
             reading.IotDeviceMacAddress,
             StringFromSensorTypeAssembler.FromSensorTypeToString(reading.Type),

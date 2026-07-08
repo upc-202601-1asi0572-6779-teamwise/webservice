@@ -10,8 +10,6 @@ public static class AgronomicInterventionResourceFromEntityAssembler
     )
     {
         return new AgronomicInterventionResource(
-            intervention.Id,
-            intervention.RecommendationId,
             intervention.Description,
             intervention.PerformedBy,
             intervention.ExecutionDate,

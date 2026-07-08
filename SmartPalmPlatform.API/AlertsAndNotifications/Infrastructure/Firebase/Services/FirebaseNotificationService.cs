@@ -13,25 +13,39 @@ public class FirebaseNotificationService : IFirebaseNotificationService
 
     public FirebaseNotificationService()
     {
+        var json = GetFirebaseCredentialsJson();
+        if (string.IsNullOrEmpty(json))
+            return;
+
+        if (FirebaseApp.DefaultInstance is null)
+        {
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+            var credential = GoogleCredential.FromStream(stream);
+            FirebaseApp.Create(new AppOptions { Credential = credential });
+        }
+
+        _messaging = FirebaseMessaging.DefaultInstance;
+    }
+
+    private string GetFirebaseCredentialsJson()
+    {
+        var read = File.ReadAllText("firebase-credentials.json");
+        if (!string.IsNullOrEmpty(read))
+        {
+            Console.WriteLine("[Firebase] FIREBASE_CREDENTIALS_JSON loaded from file.");
+            return read;
+        }
+
         var json = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_JSON");
         if (string.IsNullOrEmpty(json))
         {
             Console.WriteLine(
                 "[Firebase] FIREBASE_CREDENTIALS_JSON not set. Notifications disabled."
             );
-            return;
+            return string.Empty;
         }
 
-        if (FirebaseApp.DefaultInstance is null)
-        {
-            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            var serviceCredential = ServiceAccountCredential.FromServiceAccountData(stream);
-            FirebaseApp.Create(
-                new AppOptions { Credential = serviceCredential.ToGoogleCredential() }
-            );
-        }
-
-        _messaging = FirebaseMessaging.DefaultInstance;
+        return json;
     }
 
     public async Task SendNotificationAsync(Alert alert)
