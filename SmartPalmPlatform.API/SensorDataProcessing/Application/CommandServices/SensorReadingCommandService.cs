@@ -27,6 +27,7 @@ public class SensorReadingCommandService(
         {
             var reading = SensorReadingTypeFactory.DefaultSensorReading(
                 command.EdgeDeviceMacAddress,
+                r.IotDeviceMacAddress,
                 r.Type,
                 r.MeasuredAt,
                 r.Value

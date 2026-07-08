@@ -15,6 +15,7 @@ public static class EdgeSynchronizationCommandFromResourceAssembler
             edgeMac,
             resource
                 .readings.Select(r => new SensorReadingPayload(
+                    r.deviceMac,
                     SensorTypeFromStringAssembler.FromStringToSensorType(r.sensorType),
                     r.measuredAt,
                     r.value
