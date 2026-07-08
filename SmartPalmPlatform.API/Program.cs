@@ -1,7 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi;
@@ -21,6 +17,7 @@ using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Firebase.Servi
 using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistence.EFC.Repositories;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.CropMonitoring.Application.Internal.EventHandlers;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.QueryServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Repositories;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.CommandServices;
@@ -194,8 +191,9 @@ builder.Services.AddScoped<IInstallationPlanService, InstallationPlanService>();
 // Event Handlers
 builder.Services.AddMediatR(config =>
 {
-    config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
+    config.RegisterServicesFromAssemblyContaining(typeof(CropMonitoringIotDeviceRegisteredEventHandler));
     config.RegisterServicesFromAssemblyContaining(typeof(ThresholdExceededEventHandler));
+    config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
 });
 
 builder.Services.AddCors(options =>
