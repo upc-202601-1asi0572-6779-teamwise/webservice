@@ -66,7 +66,9 @@ public class UserCommandService(
             var hashedPassword = hashingService.HashPassword(command.Password);
 
             Console.WriteLine("[SignUp] Creating user object...");
-            var role = Enum.Parse<UserRole>(command.Role, ignoreCase: true);
+            var validRole = Enum.TryParse<UserRole>(command.Role, true, out var role);
+            if (!validRole) throw new ArgumentException("Invalid role from list: Agronomist, PalmGrower"); 
+
             if (role == UserRole.Administrator)
                 throw new ArgumentException("Administrator accounts cannot be created via sign-up.");
             var user = new User(command.Username, hashedPassword, command.Email, command.FullName, role);

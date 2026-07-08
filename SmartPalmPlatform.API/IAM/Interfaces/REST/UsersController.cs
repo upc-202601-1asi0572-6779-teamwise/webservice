@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.IAM.Interfaces.REST;
 
-[Authorize]
+[Authorize(Roles = "Administrator")]
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
