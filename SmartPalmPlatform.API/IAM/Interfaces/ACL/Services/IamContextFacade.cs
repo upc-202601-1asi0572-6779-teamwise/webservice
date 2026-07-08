@@ -8,7 +8,7 @@ public class IamContextFacade(IUserCommandService userCommandService, IUserQuery
 {
     public async Task<int> CreateUser(string username, string password)
     {
-        var signUpCommand = new SignUpCommand(username, password);
+        var signUpCommand = new SignUpCommand(username, password, string.Empty, string.Empty, "PalmGrower");
         await userCommandService.Handle(signUpCommand);
         var getUserByUsernameQuery = new GetUserByUsernameQuery(username);
         var result = await userQueryService.Handle(getUserByUsernameQuery);

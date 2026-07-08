@@ -41,6 +41,12 @@ public class RequestAuthorizationMiddleware(RequestDelegate next)
         try
         {
             var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+
+            // log al headers
+            foreach (var header in context.Request.Headers)
+            {
+                Console.WriteLine($"[Middleware] Header: {header.Key}: {header.Value}");
+            }
             if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
             {
                 Console.WriteLine("[Middleware] No valid authorization header found");
