@@ -10,11 +10,6 @@ public static class RegisterIotDeviceCommandFromResourceAssembler
         IotDeviceRegistrationResource resource
     )
     {
-        return new RegisterIotDeviceCommand(
-            edgeDeviceMac,
-            resource.iotMac,
-            resource.username,
-            resource.password
-        );
+        return new RegisterIotDeviceCommand(edgeDeviceMac, resource.iotMac);
     }
 }

@@ -14,11 +14,17 @@ public class SensorReadingCommandService(
     IMediator mediator,
     ISensorReadingRepository sensorReadingRepository,
     IAgronomicThresholdRepository agronomicThresholdRepository,
+    IKnownEdgeGatewayRepository knownEdgeGatewayRepository,
     IThresholdEvaluationService thresholdEvaluationService
 ) : ISensorReadingCommandService
 {
     public async Task Handle(ReadDeviceSensorsDataCommand command)
     {
+        if (!await knownEdgeGatewayRepository.ExistsByMacAddress(command.EdgeDeviceMacAddress))
+            throw new KeyNotFoundException(
+                $"Edge gateway '{command.EdgeDeviceMacAddress}' not found."
+            );
+
         var threesholds = await agronomicThresholdRepository.FindByEdgeDeviceMacAddress(
             command.EdgeDeviceMacAddress
         );

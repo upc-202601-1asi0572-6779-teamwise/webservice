@@ -5,18 +5,20 @@ public class EdgeDevice
     public int Id { get; private set; }
     public string MacAddress { get; private set; }
     public int MonitoringZoneId { get; private set; }
+    public int UserId { get; private set; }
     public DateTime LastConnectivityCheckAt { get; private set; } = DateTime.Now;
     public DateTime LastSyncAt { get; private set; } = DateTime.Now;
     public DateTime CreatedAt { get; private set; } = DateTime.Now;
 
-    public EdgeDevice(string macAddress, int monitoringZoneId)
+    public EdgeDevice(string macAddress, int monitoringZoneId, int userId)
     {
         this.MacAddress = macAddress;
         this.MonitoringZoneId = monitoringZoneId;
+        this.UserId = userId;
     }
 
     public EdgeDevice()
-        : this(string.Empty, 0) { }
+        : this(string.Empty, 0, 0) { }
 
     public void Register()
     {
