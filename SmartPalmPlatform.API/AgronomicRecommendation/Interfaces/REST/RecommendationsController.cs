@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Commands;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
@@ -9,6 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST;
 
+[Authorize]
 [Route("api/v1/plantations")]
 [Produces(MediaTypeNames.Application.Json)]
 [ApiController]
