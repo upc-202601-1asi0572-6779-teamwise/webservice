@@ -21,30 +21,33 @@ public class AgronomicThresholdRepository(AppDbContext context)
             .ToListAsync();
     }
 
-    public async Task<AgronomicThreshold?> FindByEdgeDeviceMacAddressAndSensorType(
-        string edgeDeviceMacAddress,
+    public async Task<AgronomicThreshold?> FindByIotDeviceMacAddressAndSensorType(
+        string iotDeviceMacAddress,
         SensorType type
     )
     {
         return await Context
             .Set<AgronomicThreshold>()
             .FirstOrDefaultAsync(threshold =>
-                threshold.EdgeDeviceMacAddress.Equals(edgeDeviceMacAddress)
+                threshold.IotDeviceMacAddress.Equals(iotDeviceMacAddress)
                 && threshold.Type.Equals(type)
             );
     }
 
-    public async Task<List<AgronomicThreshold>> FindByEdgeDeviceMacAddressAndIotDeviceMacAddress(
-        string edgeDeviceMacAddress,
+    public async Task<List<AgronomicThreshold>> FindByIotDeviceMacAddress(
         string iotDeviceMacAddress
     )
     {
         return await Context
             .Set<AgronomicThreshold>()
-            .Where(threshold =>
-                threshold.EdgeDeviceMacAddress.Equals(edgeDeviceMacAddress)
-                && threshold.IotDeviceMacAddress.Equals(iotDeviceMacAddress)
-            )
+            .Where(threshold => threshold.IotDeviceMacAddress.Equals(iotDeviceMacAddress))
             .ToListAsync();
+    }
+
+    public async Task<bool> ExistsByIotDeviceMacAddress(string iotDeviceMacAddress)
+    {
+        return await Context
+            .Set<AgronomicThreshold>()
+            .AnyAsync(threshold => threshold.IotDeviceMacAddress.Equals(iotDeviceMacAddress));
     }
 }

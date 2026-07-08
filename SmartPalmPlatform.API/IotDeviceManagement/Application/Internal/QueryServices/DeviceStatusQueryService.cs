@@ -38,4 +38,9 @@ public class DeviceStatusQueryService(
 
         return Tuple.Create(edgeDevice, registry);
     }
+
+    public async Task<IEnumerable<EdgeDevice>> Handle(GetAllEdgeGatewaysQuery query)
+    {
+        return await deviceRepository.ListAsync();
+    }
 }

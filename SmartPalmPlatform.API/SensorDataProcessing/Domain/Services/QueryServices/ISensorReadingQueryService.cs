@@ -6,4 +6,5 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServic
 public interface ISensorReadingQueryService
 {
     Task<List<SensorReading>> Handle(SensorReadingQuery query);
+    Task<List<SensorReading>> Handle(DeviceSensorReadingQuery query);
 }

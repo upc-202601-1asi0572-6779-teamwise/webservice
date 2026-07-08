@@ -4,5 +4,6 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Domain.Commands;
 
 public record ReadDeviceSensorsDataCommand(
     string EdgeDeviceMacAddress,
-    List<SensorReadingPayload> Readings
+    List<SensorReadingPayload> Readings,
+    DateTime SyncedAt
 );

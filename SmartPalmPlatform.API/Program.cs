@@ -139,7 +139,7 @@ builder.Services.AddOpenApi();
 
 // add swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options => options.EnableAnnotations());
 
 var app = builder.Build();
 

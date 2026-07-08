@@ -1,17 +1,29 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
-    [Route("api/v1/edges")]
+    [Route("api/v1/edge-gateways")]
+    [Produces(MediaTypeNames.Application.Json)]
     [ApiController]
+    [SwaggerTag("Available Edge Gateway Registration endpoints")]
     public class DeviceAuthenticationController(
-        IDeviceStatusCommandService deviceStatusCommandService
+        IDeviceStatusCommandService deviceStatusCommandService,
+        ILogger<DeviceAuthenticationController> logger
     ) : ControllerBase
     {
         [HttpPost("")]
+        [SwaggerOperation(
+            Summary = "Register an edge gateway",
+            Description = "Registers a new edge gateway device identified by its MAC address and assigns it to a monitoring zone.",
+            OperationId = "RegisterEdgeDevice")]
+        [SwaggerResponse(StatusCodes.Status201Created, "The edge gateway was registered")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Invalid credentials")]
+        [SwaggerResponse(StatusCodes.Status409Conflict, "The edge gateway is already registered")]
         public async Task<IActionResult> RegisterEdgeDevice(
             [FromBody] EdgeDeviceRegistrationResource resource
         )
@@ -24,7 +36,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 
                 await deviceStatusCommandService.Handle(command);
 
-                return Created($"/api/v1/edges/{resource.edgeMac}", null);
+                return Created($"/api/v1/edge-gateways/{resource.edgeMac}", null);
             }
             catch (Exception e) when (e is UnauthorizedAccessException)
             {
@@ -36,29 +48,41 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
+                logger.LogError(e, "Unexpected error while registering edge device.");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = e.Message }
+                    new { message = "An unexpected error occurred." }
                 );
             }
         }
 
-        [HttpPost("{edgeMac}/iot-devices")]
+        [HttpPost("{gateway-mac}/iot-devices")]
+        [SwaggerOperation(
+            Summary = "Register an IoT device under an edge gateway",
+            Description = "Registers a new IoT device identified by its MAC address, associating it with the edge gateway given in the route.",
+            OperationId = "RegisterIotDevice")]
+        [SwaggerResponse(StatusCodes.Status201Created, "The IoT device was registered")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Invalid credentials")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
+        [SwaggerResponse(StatusCodes.Status409Conflict, "The IoT device is already registered")]
         public async Task<IActionResult> RegisterIotDevice(
-            [FromRoute] string edgeMac,
+            [FromRoute(Name = "gateway-mac")] string gatewayMac,
             [FromBody] IotDeviceRegistrationResource resource
         )
         {
             try
             {
                 var command = RegisterIotDeviceCommandFromResourceAssembler.ToCommandFromResource(
-                    edgeMac,
+                    gatewayMac,
                     resource
                 );
 
                 await deviceStatusCommandService.Handle(command);
 
-                return Created($"/api/v1/edges/{edgeMac}/iot-devices/{resource.iotMac}", null);
+                return Created(
+                    $"/api/v1/edge-gateways/{gatewayMac}/iot-devices/{resource.iotMac}",
+                    null
+                );
             }
             catch (Exception e) when (e is UnauthorizedAccessException)
             {
@@ -74,9 +98,10 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
+                logger.LogError(e, "Unexpected error while registering IoT device.");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = e.Message }
+                    new { message = "An unexpected error occurred." }
                 );
             }
         }

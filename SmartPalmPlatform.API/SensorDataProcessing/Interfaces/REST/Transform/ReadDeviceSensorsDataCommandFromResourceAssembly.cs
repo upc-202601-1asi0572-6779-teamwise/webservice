@@ -11,16 +11,25 @@ public static class ReadDeviceSensorsDataCommandFromResourceAssembly
         ReadDeviceSensorsDataResource resource
     )
     {
-        var command = new ReadDeviceSensorsDataCommand(
-            edgeMac,
-            resource
-                .readings.Select(r => new SensorReadingPayload(
+        if (resource.devices is null || resource.devices.Count == 0)
+            throw new ArgumentException("At least one device with readings is required.");
+
+        var readings = resource
+            .devices.SelectMany(device =>
+            {
+                if (string.IsNullOrWhiteSpace(device.deviceMac))
+                    throw new ArgumentException("deviceMac is required for every device group.");
+
+                return device.readings.Select(r => new SensorReadingPayload(
+                    device.deviceMac,
                     SensorTypeFromStringAssembler.FromStringToSensorType(r.sensorType),
                     r.measuredAt,
                     r.value
-                ))
-                .ToList()
-        );
+                ));
+            })
+            .ToList();
+
+        var command = new ReadDeviceSensorsDataCommand(edgeMac, readings, resource.syncedAt);
 
         return command;
     }

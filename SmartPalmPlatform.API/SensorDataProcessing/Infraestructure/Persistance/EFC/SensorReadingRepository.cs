@@ -13,16 +13,50 @@ public class SensorReadingRepository(AppDbContext context)
     public async Task<List<SensorReading>> FindByEdgeDeviceMacAddressAndMeasureTimeRange(
         string edgeDeviceMacAddress,
         DateTime fromTime,
-        DateTime toTime
+        DateTime toTime,
+        string? iotDeviceMacAddress,
+        int page,
+        int size
     )
     {
-        return await Context
+        var query = Context
             .Set<SensorReading>()
             .Where(reading =>
                 reading.EdgeDeviceMacAddress.Equals(edgeDeviceMacAddress)
                 && reading.MeasuredAt >= fromTime
                 && reading.MeasuredAt <= toTime
+            );
+
+        if (!string.IsNullOrWhiteSpace(iotDeviceMacAddress))
+            query = query.Where(reading =>
+                reading.IotDeviceMacAddress.Equals(iotDeviceMacAddress)
+            );
+
+        return await query
+            .OrderByDescending(reading => reading.MeasuredAt)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+    }
+
+    public async Task<List<SensorReading>> FindByIotDeviceMacAddressAndMeasureTimeRange(
+        string iotDeviceMacAddress,
+        DateTime fromTime,
+        DateTime toTime,
+        int page,
+        int size
+    )
+    {
+        return await Context
+            .Set<SensorReading>()
+            .Where(reading =>
+                reading.IotDeviceMacAddress.Equals(iotDeviceMacAddress)
+                && reading.MeasuredAt >= fromTime
+                && reading.MeasuredAt <= toTime
             )
+            .OrderByDescending(reading => reading.MeasuredAt)
+            .Skip((page - 1) * size)
+            .Take(size)
             .ToListAsync();
     }
 }

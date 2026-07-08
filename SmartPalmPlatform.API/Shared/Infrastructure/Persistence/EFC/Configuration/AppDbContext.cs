@@ -72,6 +72,13 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         builder.Entity<SensorReading>().Property(reading => reading.Type).IsRequired();
         builder.Entity<SensorReading>().Property(reading => reading.Value).IsRequired();
         builder.Entity<SensorReading>().Property(reading => reading.MeasuredAt).IsRequired();
+        builder
+            .Entity<SensorReading>()
+            .Property(reading => reading.IotDeviceMacAddress)
+            .IsRequired();
+        builder
+            .Entity<SensorReading>()
+            .HasIndex(reading => new { reading.IotDeviceMacAddress, reading.MeasuredAt });
 
         builder.Entity<EdgeRegistry>().ToTable("edge_registry");
         builder.Entity<EdgeRegistry>().HasKey(registry => registry.Id);

@@ -9,9 +9,13 @@ public static class ReadDeviceSensorsDataCommandFromIotDeviceSynchronizationEven
         IotDeviceSynchronizationEvent notification
     )
     {
+        // IotDeviceSynchronizationEvent no trae un timestamp propio de sincronización
+        // (su origen, EdgeSynchronizationCommand, tampoco lo tiene todavía); se usa
+        // DateTime.Now, igual que EdgeDevice.SynchronizeEdgeData() se autotimestampea.
         var command = new ReadDeviceSensorsDataCommand(
             notification.EdgeDeviceMacAddress,
-            notification.SynchronizationReadings
+            notification.SynchronizationReadings,
+            DateTime.Now
         );
 
         return command;

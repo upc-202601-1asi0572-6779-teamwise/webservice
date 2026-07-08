@@ -11,11 +11,12 @@ public class AgronomicThresholdQueryService(
 {
     public async Task<List<AgronomicThreshold>> Handle(AgronomicThresholdQuery query)
     {
-        var thresholds =
-            await agronomicThresholdRepository.FindByEdgeDeviceMacAddressAndIotDeviceMacAddress(
-                query.EdgeDeviceMacAddress,
-                query.IotDeviceMacAddresses
-            );
+        var thresholds = await agronomicThresholdRepository.FindByIotDeviceMacAddress(
+            query.IotDeviceMacAddress
+        );
+
+        if (thresholds.Count == 0)
+            throw new KeyNotFoundException($"IoT device '{query.IotDeviceMacAddress}' not found.");
 
         return thresholds;
     }

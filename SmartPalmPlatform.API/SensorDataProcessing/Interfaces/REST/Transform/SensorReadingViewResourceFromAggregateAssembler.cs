@@ -10,6 +10,7 @@ public static class SensorReadingViewResourceFromAggregateAssembler
         return new SensorReadingViewResource(
             reading.Id,
             reading.EdgeDeviceMacAddress,
+            reading.IotDeviceMacAddress,
             StringFromSensorTypeAssembler.FromSensorTypeToString(reading.Type),
             reading.Value,
             reading.Unit.ToString(),
