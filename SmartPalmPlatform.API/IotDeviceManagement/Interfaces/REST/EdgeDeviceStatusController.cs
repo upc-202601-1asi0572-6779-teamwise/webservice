@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IotDeviceManagement.Domain.Queries;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Resources;
@@ -13,6 +14,59 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         IDeviceStatusQueryService deviceStatusQueryService
     ) : ControllerBase
     {
+        [HttpGet("")]
+        public async Task<IActionResult> GetAllGateways()
+        {
+            try
+            {
+                var devices = await deviceStatusQueryService.Handle(new GetAllEdgeGatewaysQuery());
+
+                var response = devices.Select(
+                    ConnectivityStatusResourceFromEdgeDeviceAggregateAssembler.ToResourceFromEdgeDeviceAggregate
+                );
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = e.Message }
+                );
+            }
+        }
+
+        [HttpGet("{gateway-mac}/devices")]
+        public async Task<IActionResult> GetDevices(
+            [FromRoute(Name = "gateway-mac")] string gatewayMac
+        )
+        {
+            try
+            {
+                var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(gatewayMac);
+                var result = await deviceStatusQueryService.Handle(query);
+
+                var response =
+                    GatewayDevicesResourceFromEdgeDeviceAggregateAssembler.ToResourceFromEdgeDeviceAggregate(
+                        result.Item1,
+                        result.Item2
+                    );
+
+                return Ok(response);
+            }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                return NotFound(new { message = e.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = e.Message }
+                );
+            }
+        }
+
         [HttpPost("{gateway-mac}/synchronizations")]
         public async Task<IActionResult> SynchronizeEdge(
             [FromRoute(Name = "gateway-mac")] string gatewayMac,
