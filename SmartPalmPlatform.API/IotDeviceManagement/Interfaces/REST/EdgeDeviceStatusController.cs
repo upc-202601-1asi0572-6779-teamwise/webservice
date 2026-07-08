@@ -6,23 +6,23 @@ using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
-    [Route("api/v1/edges")]
+    [Route("api/v1/edge-gateways")]
     [ApiController]
     public class DeviceStatusController(
         IDeviceStatusCommandService deviceStatusCommandService,
         IDeviceStatusQueryService deviceStatusQueryService
     ) : ControllerBase
     {
-        [HttpPost("{edgeMac}/synchronizations")]
+        [HttpPost("{gateway-mac}/synchronizations")]
         public async Task<IActionResult> SynchronizeEdge(
-            [FromRoute] string edgeMac,
+            [FromRoute(Name = "gateway-mac")] string gatewayMac,
             [FromBody] EdgeSynchronizationResource resource
         )
         {
             try
             {
                 var command = EdgeSynchronizationCommandFromResourceAssembler.ToCommandFromResource(
-                    edgeMac,
+                    gatewayMac,
                     resource
                 );
                 await deviceStatusCommandService.Handle(command);
@@ -45,13 +45,15 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpGet("{edgeMac}/connectivity")]
-        public async Task<IActionResult> GetConnectivityStatus([FromRoute] string edgeMac)
+        [HttpGet("{gateway-mac}/connectivity")]
+        public async Task<IActionResult> GetConnectivityStatus(
+            [FromRoute(Name = "gateway-mac")] string gatewayMac
+        )
         {
             try
             {
                 var query = ConnectiviyStatusQueryFromResourceAssembler.ToQueryFromResource(
-                    edgeMac
+                    gatewayMac
                 );
                 var result = await deviceStatusQueryService.Handle(query);
 
@@ -75,12 +77,14 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpGet("{edgeMac}/registry")]
-        public async Task<IActionResult> GetDeviceRegistry([FromRoute] string edgeMac)
+        [HttpGet("{gateway-mac}/registry")]
+        public async Task<IActionResult> GetDeviceRegistry(
+            [FromRoute(Name = "gateway-mac")] string gatewayMac
+        )
         {
             try
             {
-                var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(edgeMac);
+                var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(gatewayMac);
                 var result = await deviceStatusQueryService.Handle(query);
 
                 var response =

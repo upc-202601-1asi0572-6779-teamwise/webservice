@@ -8,22 +8,22 @@ using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [ApiController]
-[Route("api/v1/edges")]
+[Route("api/v1/edge-gateways")]
 public class ReadDeviceSensorDataController(
     ISensorReadingCommandService sensorReadingCommandService,
     ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
-    [HttpPost("{edgeMac}/sensor-readings")]
+    [HttpPost("{gateway-mac}/sensor-readings")]
     public async Task<IActionResult> SubmitSensorReadings(
-        [FromRoute] string edgeMac,
+        [FromRoute(Name = "gateway-mac")] string gatewayMac,
         [FromBody] ReadDeviceSensorsDataResource resource
     )
     {
         try
         {
             var command = ReadDeviceSensorsDataCommandFromResourceAssembly.FromResourceToCommand(
-                edgeMac,
+                gatewayMac,
                 resource
             );
             await sensorReadingCommandService.Handle(command);
@@ -43,9 +43,9 @@ public class ReadDeviceSensorDataController(
         }
     }
 
-    [HttpGet("{edgeMac}/sensor-readings")]
+    [HttpGet("{gateway-mac}/sensor-readings")]
     public async Task<IActionResult> GetSensorReadings(
-        [FromRoute] string edgeMac,
+        [FromRoute(Name = "gateway-mac")] string gatewayMac,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to
     )
@@ -55,7 +55,7 @@ public class ReadDeviceSensorDataController(
             var resolvedFrom = from ?? DateTime.MinValue;
             var resolvedTo   = to   ?? DateTime.MaxValue;
 
-            var query = new SensorReadingQuery(edgeMac, resolvedFrom, resolvedTo);
+            var query = new SensorReadingQuery(gatewayMac, resolvedFrom, resolvedTo);
 
             var readings = await sensorReadingQueryService.Handle(query);
             var response = SensorReadingViewResourceFromAggregateAssembler

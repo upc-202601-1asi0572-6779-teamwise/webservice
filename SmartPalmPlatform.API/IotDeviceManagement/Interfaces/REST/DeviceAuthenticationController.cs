@@ -5,7 +5,7 @@ using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
-    [Route("api/v1/edges")]
+    [Route("api/v1/edge-gateways")]
     [ApiController]
     public class DeviceAuthenticationController(
         IDeviceStatusCommandService deviceStatusCommandService
@@ -24,7 +24,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 
                 await deviceStatusCommandService.Handle(command);
 
-                return Created($"/api/v1/edges/{resource.edgeMac}", null);
+                return Created($"/api/v1/edge-gateways/{resource.edgeMac}", null);
             }
             catch (Exception e) when (e is UnauthorizedAccessException)
             {
@@ -43,22 +43,25 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpPost("{edgeMac}/iot-devices")]
+        [HttpPost("{gateway-mac}/iot-devices")]
         public async Task<IActionResult> RegisterIotDevice(
-            [FromRoute] string edgeMac,
+            [FromRoute(Name = "gateway-mac")] string gatewayMac,
             [FromBody] IotDeviceRegistrationResource resource
         )
         {
             try
             {
                 var command = RegisterIotDeviceCommandFromResourceAssembler.ToCommandFromResource(
-                    edgeMac,
+                    gatewayMac,
                     resource
                 );
 
                 await deviceStatusCommandService.Handle(command);
 
-                return Created($"/api/v1/edges/{edgeMac}/iot-devices/{resource.iotMac}", null);
+                return Created(
+                    $"/api/v1/edge-gateways/{gatewayMac}/iot-devices/{resource.iotMac}",
+                    null
+                );
             }
             catch (Exception e) when (e is UnauthorizedAccessException)
             {
