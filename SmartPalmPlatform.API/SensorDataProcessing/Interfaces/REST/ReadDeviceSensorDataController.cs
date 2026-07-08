@@ -26,6 +26,7 @@ public class ReadDeviceSensorDataController(
         OperationId = "SubmitSensorReadings")]
     [SwaggerResponse(StatusCodes.Status201Created, "The sensor readings were persisted")]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid payload")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
     public async Task<IActionResult> SubmitSensorReadings(
         [FromRoute(Name = "gateway-mac")] string gatewayMac,
         [FromBody] ReadDeviceSensorsDataResource resource
@@ -44,6 +45,10 @@ public class ReadDeviceSensorDataController(
         catch (Exception e) when (e is ArgumentException)
         {
             return BadRequest(new { message = e.Message });
+        }
+        catch (Exception e) when (e is KeyNotFoundException)
+        {
+            return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {

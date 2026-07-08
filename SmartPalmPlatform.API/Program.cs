@@ -26,6 +26,18 @@ using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
+using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.IAM.Domain.Repositories;
+using SmartPalmPlatform.API.IAM.Domain.Services;
+using SmartPalmPlatform.API.IAM.Infrastructure.Hashing.BCrypt.Services;
+using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Extensions;
+using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Configuration;
+using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Services;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL.Services;
 // Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
 // This switch restores the pre-v6 behavior so Local datetimes are accepted.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -91,6 +103,23 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 // Injection Configuration
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// // IAM Bounded Context
+
+// Injection Configuration
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserCommandService, UserCommandService>();
+builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IHashingService, HashingService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
+
+// Render provides the JWT secret as an env var; local dev reads it from appsettings.
+var jwtSecretFromEnv = Environment.GetEnvironmentVariable("JWT_SECRET");
+if (!string.IsNullOrEmpty(jwtSecretFromEnv))
+    builder.Configuration["Jwt:Secret"] = jwtSecretFromEnv;
+
+builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("Jwt"));
+
 // //  IoT Device Bounded Context
 
 // Injection Configuration
@@ -112,6 +141,7 @@ builder.Services.AddScoped<IEdgeSynchronizationService, EdgeSynchronizationServi
 // Injection Configuration
 builder.Services.AddScoped<ISensorReadingRepository, SensorReadingRepository>();
 builder.Services.AddScoped<IAgronomicThresholdRepository, AgronomicThresholdRepository>();
+builder.Services.AddScoped<IKnownEdgeGatewayRepository, KnownEdgeGatewayRepository>();
 
 builder.Services.AddScoped<ISensorReadingCommandService, SensorReadingCommandService>();
 builder.Services.AddScoped<ISensorReadingQueryService, SensorReadingQueryService>();
@@ -206,6 +236,7 @@ if (!isProduction)
     app.UseHttpsRedirection();
 }
 
+app.UseRequestAuthorization();
 app.UseAuthorization();
 app.MapControllers();
 
