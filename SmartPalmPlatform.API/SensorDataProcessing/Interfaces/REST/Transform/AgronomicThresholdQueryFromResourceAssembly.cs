@@ -4,8 +4,8 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
 
 public static class AgronomicThresholdQueryFromResourceAssembly
 {
-    public static AgronomicThresholdQuery ToQueryFromResource(string edgeMac, string iotMac)
+    public static AgronomicThresholdQuery ToQueryFromResource(string deviceMac)
     {
-        return new AgronomicThresholdQuery(edgeMac, iotMac);
+        return new AgronomicThresholdQuery(deviceMac);
     }
 }

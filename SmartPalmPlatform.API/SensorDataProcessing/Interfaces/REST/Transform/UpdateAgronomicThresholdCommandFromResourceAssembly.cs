@@ -6,14 +6,12 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
 public static class UpdateAgronomicThresholdCommandFromResourceAssembly
 {
     public static UpdateAgronomicThresholdCommand FromResourceToCommand(
-        string edgeMac,
-        string iotMac,
+        string deviceMac,
         UpdateAgronomicThresholdResource resource
     )
     {
         var command = new UpdateAgronomicThresholdCommand(
-            edgeMac,
-            iotMac,
+            deviceMac,
             SensorTypeFromStringAssembler.FromStringToSensorType(resource.type),
             resource.min,
             resource.max,

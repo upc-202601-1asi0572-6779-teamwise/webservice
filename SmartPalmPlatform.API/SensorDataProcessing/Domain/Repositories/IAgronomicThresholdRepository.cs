@@ -7,12 +7,11 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Domain.Repositories;
 public interface IAgronomicThresholdRepository : IBaseRepository<AgronomicThreshold>
 {
     public Task<List<AgronomicThreshold>> FindByEdgeDeviceMacAddress(string edgeDeviceMacAddress);
-    public Task<List<AgronomicThreshold>> FindByEdgeDeviceMacAddressAndIotDeviceMacAddress(
-        string edgeDeviceMacAddress,
-        string iotDeviceMacAddress
-    );
-    public Task<AgronomicThreshold?> FindByEdgeDeviceMacAddressAndSensorType(
-        string edgeDeviceMacAddress,
+
+    public Task<List<AgronomicThreshold>> FindByIotDeviceMacAddress(string iotDeviceMacAddress);
+
+    public Task<AgronomicThreshold?> FindByIotDeviceMacAddressAndSensorType(
+        string iotDeviceMacAddress,
         SensorType type
     );
 

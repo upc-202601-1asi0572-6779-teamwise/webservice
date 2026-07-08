@@ -58,27 +58,40 @@ public class SensorReadingCommandService(
 
     public async Task Handle(UpdateAgronomicThresholdCommand command)
     {
-        var threshold = await agronomicThresholdRepository.FindByEdgeDeviceMacAddressAndSensorType(
-            command.EdgeDeviceMacAddress,
+        var threshold = await agronomicThresholdRepository.FindByIotDeviceMacAddressAndSensorType(
+            command.IotDeviceMacAddress,
             command.Type
         );
 
-        if (threshold is null)
+        if (threshold is not null)
         {
-            var newThreshold = AgronomicThresholdTypeFactory.DefaultThreshold(
-                command.EdgeDeviceMacAddress,
-                command.IotDeviceMacAddress,
-                command.Type
-            );
-
-            await agronomicThresholdRepository.AddAsync(newThreshold);
+            threshold.Update(command.Min, command.Max, command.Description);
+            agronomicThresholdRepository.Update(threshold);
             await uow.CompleteAsync();
             return;
         }
 
-        threshold.Update(command.Min, command.Max, command.Description);
+        // El registro del dispositivo (IotDeviceRegisteredEventHandler) crea los 5
+        // thresholds por defecto; si falta justo el de este SensorType, se resuelve el
+        // edgeMac desde cualquier otro threshold ya existente del mismo dispositivo, sin
+        // depender de IotDeviceManagement. Si no hay ninguno, el dispositivo no existe.
+        var existingThresholds = await agronomicThresholdRepository.FindByIotDeviceMacAddress(
+            command.IotDeviceMacAddress
+        );
+        var edgeDeviceMacAddress = existingThresholds.FirstOrDefault()?.EdgeDeviceMacAddress;
 
-        agronomicThresholdRepository.Update(threshold);
+        if (edgeDeviceMacAddress is null)
+            throw new KeyNotFoundException(
+                $"IoT device '{command.IotDeviceMacAddress}' not found."
+            );
+
+        var newThreshold = AgronomicThresholdTypeFactory.DefaultThreshold(
+            edgeDeviceMacAddress,
+            command.IotDeviceMacAddress,
+            command.Type
+        );
+
+        await agronomicThresholdRepository.AddAsync(newThreshold);
         await uow.CompleteAsync();
     }
 }
