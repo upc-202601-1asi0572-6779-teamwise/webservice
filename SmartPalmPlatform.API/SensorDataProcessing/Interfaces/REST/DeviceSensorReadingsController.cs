@@ -1,16 +1,29 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Transform;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [ApiController]
 [Route("api/v1/devices")]
-public class DeviceSensorReadingsController(ISensorReadingQueryService sensorReadingQueryService)
-    : ControllerBase
+[Produces(MediaTypeNames.Application.Json)]
+[SwaggerTag("Available Device Sensor Reading endpoints")]
+public class DeviceSensorReadingsController(
+    ISensorReadingQueryService sensorReadingQueryService,
+    ILogger<DeviceSensorReadingsController> logger
+) : ControllerBase
 {
     [HttpGet("{device-mac}/sensor-readings")]
+    [SwaggerOperation(
+        Summary = "Get sensor readings of an IoT device",
+        Description = "Returns the historical sensor readings of a single IoT device, regardless of which edge gateway forwarded them. Supports filtering by date range and pagination.",
+        OperationId = "GetDeviceSensorReadings")]
+    [SwaggerResponse(StatusCodes.Status200OK, "The sensor readings were found", typeof(IEnumerable<SensorReadingViewResource>))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "The IoT device was not found")]
     public async Task<IActionResult> GetSensorReadings(
         [FromRoute(Name = "device-mac")] string deviceMac,
         [FromQuery] DateTime? from,
@@ -44,9 +57,10 @@ public class DeviceSensorReadingsController(ISensorReadingQueryService sensorRea
         }
         catch (Exception e)
         {
+            logger.LogError(e, "Unexpected error while retrieving device sensor readings.");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
-                new { message = e.Message }
+                new { message = "An unexpected error occurred." }
             );
         }
     }
