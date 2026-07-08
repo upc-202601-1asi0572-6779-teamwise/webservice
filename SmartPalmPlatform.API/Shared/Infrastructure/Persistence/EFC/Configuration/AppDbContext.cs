@@ -8,6 +8,7 @@ using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
 using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Configuration.Extensions;
+using SmartPalmPlatform.API.CropMonitoring.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 
 namespace SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
@@ -121,6 +122,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
 
         // Apply IAM context configuration
         builder.ApplyIamConfiguration();
+
+        // Apply Crop Monitoring context configuration
+        builder.ApplyCropMonitoringConfiguration();
 
         // Apply Notifications context configuration
         builder.ApplyNotificationsConfiguration();
