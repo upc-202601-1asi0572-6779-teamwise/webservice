@@ -1,5 +1,50 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.OpenApi;
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.EventHandlers;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Application.OutboundServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Repositories;
+using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Firebase.Services;
+using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.CropMonitoring.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.CropMonitoring.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.CropMonitoring.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Repositories;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.CropMonitoring.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.DomainServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
+using SmartPalmPlatform.API.IAM.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.IAM.Domain.Model.Enums;
+using SmartPalmPlatform.API.IAM.Domain.Repositories;
+using SmartPalmPlatform.API.IAM.Domain.Services;
+using SmartPalmPlatform.API.IAM.Domain.Services.CommandServices;
+using SmartPalmPlatform.API.IAM.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.IAM.Domain.Services.QueryServices;
+using SmartPalmPlatform.API.IAM.Infrastructure.Hashing.BCrypt.Services;
+using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Extensions;
+using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Configuration;
+using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Services;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Application.Internal.QueryServices;
@@ -20,37 +65,8 @@ using SmartPalmPlatform.API.SensorDataProcessing.Infraestructure.Persistance.EFC
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
+using Swashbuckle.AspNetCore.Annotations;
 
-using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
-using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
-using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
-using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
-using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.CommandServices;
-using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.DomainServices;
-using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.EventHandlers;
-using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.QueryServices;
-using SmartPalmPlatform.API.AlertsAndNotifications.Application.OutboundServices;
-using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Repositories;
-using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.CommandServices;
-using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.QueryServices;
-using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Firebase.Services;
-using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistence.EFC.Repositories;
-using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
-using SmartPalmPlatform.API.IAM.Application.Internal.DomainServices;
-using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
-using SmartPalmPlatform.API.IAM.Application.Internal.QueryServices;
-using SmartPalmPlatform.API.IAM.Domain.Repositories;
-using SmartPalmPlatform.API.IAM.Domain.Services;
-using SmartPalmPlatform.API.IAM.Domain.Services.CommandServices;
-using SmartPalmPlatform.API.IAM.Domain.Services.DomainServices;
-using SmartPalmPlatform.API.IAM.Domain.Services.QueryServices;
-using SmartPalmPlatform.API.IAM.Infrastructure.Hashing.BCrypt.Services;
-using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Repositories;
-using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Configuration;
-using SmartPalmPlatform.API.IAM.Infrastructure.Tokens.JWT.Services;
-using SmartPalmPlatform.API.IAM.Interfaces.ACL;
-using SmartPalmPlatform.API.IAM.Interfaces.ACL.Services;
-using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Extensions;
 // Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
 // This switch restores the pre-v6 behavior so Local datetimes are accepted.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -58,7 +74,8 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // Detect production environment (Render sets PORT and RENDER env vars)
-var isProduction = builder.Environment.IsProduction()
+var isProduction =
+    builder.Environment.IsProduction()
     || Environment.GetEnvironmentVariable("RENDER") != null
     || Environment.GetEnvironmentVariable("PORT") != null;
 
@@ -81,7 +98,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (!isProduction)
     {
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        var connectionString =
+            builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new Exception("DefaultConnection not found in appsettings.json");
         options
             .UseMySQL(connectionString)
@@ -93,7 +111,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     {
         // Render provides DATABASE_URL as a URI (postgresql://user:pass@host/db)
         // Npgsql requires key=value format, so we convert it
-        var rawUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
+        var rawUrl =
+            Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? builder.Configuration.GetConnectionString("ProductionConnection")
             ?? throw new Exception("Production DB not configured. Set DATABASE_URL in Render.");
         var connectionString = ParseDatabaseUrl(rawUrl);
@@ -109,16 +128,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Configure Lowercase URLS
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-// Configure Dependency Injection
-
-// // Shared Bounded Context
-
 // Injection Configuration
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// // IAM Bounded Context
-
-// Injection Configuration
+// IAM Bounded Context
 builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
@@ -131,13 +144,14 @@ builder.Services.AddScoped<ISubscriptionCommandService, SubscriptionCommandServi
 builder.Services.AddScoped<IPaymentCommandService, PaymentCommandService>();
 builder.Services.AddScoped<ISubscriptionQueryService, SubscriptionQueryService>();
 builder.Services.AddScoped<IPaymentQueryService, PaymentQueryService>();
-builder.Services.AddScoped<ISubscriptionLifecycleDomainService, SubscriptionLifecycleDomainService>();
+builder.Services.AddScoped<
+    ISubscriptionLifecycleDomainService,
+    SubscriptionLifecycleDomainService
+>();
 builder.Services.AddScoped<IPaymentStrategy, LocalPaymentStrategy>();
 builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
 
-// //  IoT Device Bounded Context
-
-// Injection Configuration
+// IoT Device Bounded Context
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IEdgeDeviceRepository, EdgeDeviceRepository>();
 builder.Services.AddScoped<IEdgeRegistryRepository, EdgeRegistryRepository>();
@@ -151,9 +165,7 @@ builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandServi
 builder.Services.AddScoped<IDeviceStatusQueryService, DeviceStatusQueryService>();
 builder.Services.AddScoped<IEdgeSynchronizationService, EdgeSynchronizationService>();
 
-// // Sensor Data Processing Bounded Context
-
-// Injection Configuration
+// Sensor Data Processing Bounded Context
 builder.Services.AddScoped<ISensorReadingRepository, SensorReadingRepository>();
 builder.Services.AddScoped<IAgronomicThresholdRepository, AgronomicThresholdRepository>();
 
@@ -162,7 +174,7 @@ builder.Services.AddScoped<ISensorReadingQueryService, SensorReadingQueryService
 builder.Services.AddScoped<IAgronomicThresholdQueryService, AgronomicThresholdQueryService>();
 builder.Services.AddScoped<IThresholdEvaluationService, ThresholdEvaluationService>();
 
-// // Alerts & Notifications Bounded Context
+// Alerts & Notifications Bounded Context
 builder.Services.AddScoped<IAlertRepository, AlertRepository>();
 builder.Services.AddScoped<IUserAlertSettingRepository, UserAlertSettingRepository>();
 builder.Services.AddScoped<IAlertCommandService, AlertCommandService>();
@@ -171,6 +183,13 @@ builder.Services.AddScoped<IUserAlertSettingCommandService, UserAlertSettingComm
 builder.Services.AddScoped<IUserAlertSettingQueryService, UserAlertSettingQueryService>();
 builder.Services.AddScoped<AlertClassificationService>();
 builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationService>();
+
+// Crop Monitoring Bounded Context
+builder.Services.AddScoped<IPlantationRepository, PlantationRepository>();
+builder.Services.AddScoped<ISectorRepository, SectorRepository>();
+builder.Services.AddScoped<IPlantationCommandService, PlantationCommandService>();
+builder.Services.AddScoped<IPlantationQueryService, PlantationQueryService>();
+builder.Services.AddScoped<IInstallationPlanService, InstallationPlanService>();
 
 // Event Handlers
 builder.Services.AddMediatR(config =>
@@ -181,12 +200,13 @@ builder.Services.AddMediatR(config =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
+    options.AddPolicy(
+        "AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+    );
 });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -196,6 +216,27 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.EnableAnnotations());
 
+// Add authentication with Bearer token support for JWT
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            Description =
+                "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter your token in the text input below.\r\n\r\nExample: \"12345abcdef\"",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+        }
+    );
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        { new OpenApiSecuritySchemeReference("Bearer", document), new List<string>() },
+    });
+});
+
 var app = builder.Build();
 
 // Verify Database Objects are created
@@ -203,41 +244,58 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    var logger = services.GetRequiredService<ILogger<Program>>();
 
     try
     {
         if (isProduction)
         {
-            // Production (PostgreSQL): apply migrations from the migration file
             var pendingMigrations = context.Database.GetPendingMigrations().ToList();
-            logger.LogInformation("Pending migrations: {Pending}", string.Join(", ", pendingMigrations));
+            Console.WriteLine($"Pending migrations: {string.Join(", ", pendingMigrations)}");
 
             if (pendingMigrations.Any())
             {
-                logger.LogInformation("Applying migrations...");
+                Console.WriteLine("Applying migrations...");
                 context.Database.Migrate();
-                logger.LogInformation("Database migrations applied successfully.");
+                Console.WriteLine("Database migrations applied successfully.");
             }
             else
             {
-                logger.LogInformation("No pending migrations found.");
+                Console.WriteLine("No pending migrations found.");
             }
         }
         else
         {
-            // Development (MySQL): EnsureCreated derives schema from the model using MySQL types,
-            // bypassing the PostgreSQL-typed migration file.
-            logger.LogInformation("Development mode: creating MySQL schema from model...");
+            Console.WriteLine("Development mode: creating MySQL schema from model...");
             context.Database.EnsureCreated();
-            logger.LogInformation("Database schema ready.");
+            Console.WriteLine("Database schema ready.");
         }
+
+        SeedAdmin(context);
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error applying database schema: {Message}", ex.Message);
+        Console.Error.WriteLine(
+            $"Error applying database schema: {ex.GetType().Name}: {ex.Message}"
+        );
         throw;
     }
+}
+
+static void SeedAdmin(AppDbContext context)
+{
+    if (context.Set<User>().Any(u => u.Role == UserRole.Administrator))
+        return;
+
+    var admin = new User(
+        "admin",
+        BCrypt.Net.BCrypt.HashPassword("admin"),
+        "admin@smartpalm.com",
+        "System Administrator",
+        UserRole.Administrator
+    );
+    context.Set<User>().Add(admin);
+    context.SaveChanges();
+    Console.WriteLine("Admin user seeded.");
 }
 
 // Configure the HTTP request pipeline.
@@ -261,8 +319,11 @@ if (!isProduction)
     app.UseHttpsRedirection();
 }
 
+// Request authorization middleware must come before UseAuthorization()
 app.UseRequestAuthorization();
 app.UseAuthorization();
+
+// Apply authorization to all controllers (except sign-in/sign-up which are handled by IAM)
 app.MapControllers();
 
 Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
@@ -278,7 +339,7 @@ else
 
 app.Run();
 
-// Converts postgresql://user:pass@host:port/db  →  Host=...;Username=...;Password=...;Database=...
+// Converts postgresql://user:pass@host:port/db → Host=...;Username=...;Password=...;Database=...
 static string ParseDatabaseUrl(string databaseUrl)
 {
     var uri = new Uri(databaseUrl);
