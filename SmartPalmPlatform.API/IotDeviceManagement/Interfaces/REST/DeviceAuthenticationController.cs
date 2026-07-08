@@ -14,8 +14,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
     [ApiController]
     [SwaggerTag("Available Edge Gateway Registration endpoints")]
     public class DeviceAuthenticationController(
-        IDeviceStatusCommandService deviceStatusCommandService,
-        ILogger<DeviceAuthenticationController> logger
+        IDeviceStatusCommandService deviceStatusCommandService
     ) : ControllerBase
     {
         [HttpPost("")]
@@ -46,7 +45,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while registering edge device.");
+                Console.Error.WriteLine($"[RegisterEdgeDevice] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
@@ -92,7 +91,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while registering IoT device.");
+                Console.Error.WriteLine($"[RegisterIotDevice] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }

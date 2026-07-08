@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Queries;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.QueryServices;
@@ -9,14 +10,14 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 {
+    [Authorize]
     [Route("api/v1/edge-gateways")]
     [Produces(MediaTypeNames.Application.Json)]
     [ApiController]
     [SwaggerTag("Available Edge Gateway Status endpoints")]
     public class DeviceStatusController(
         IDeviceStatusCommandService deviceStatusCommandService,
-        IDeviceStatusQueryService deviceStatusQueryService,
-        ILogger<DeviceStatusController> logger
+        IDeviceStatusQueryService deviceStatusQueryService
     ) : ControllerBase
     {
         [HttpGet("")]
@@ -39,7 +40,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while listing edge gateways.");
+                Console.Error.WriteLine($"[GetAllGateways] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
@@ -77,7 +78,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while listing gateway devices.");
+                Console.Error.WriteLine($"[GetDevices] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
@@ -85,6 +86,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("{gateway-mac}/synchronizations")]
         [SwaggerOperation(
             Summary = "Synchronize an edge gateway",
@@ -117,7 +119,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while synchronizing edge gateway.");
+                Console.Error.WriteLine($"[SynchronizeEdge] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
@@ -125,6 +127,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("{gateway-mac}/connectivity")]
         [SwaggerOperation(
             Summary = "Get the connectivity status of an edge gateway",
@@ -156,7 +159,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while retrieving gateway connectivity.");
+                Console.Error.WriteLine($"[GetConnectivityStatus] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
@@ -194,7 +197,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while retrieving gateway registry.");
+                Console.Error.WriteLine($"[GetDeviceRegistry] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
