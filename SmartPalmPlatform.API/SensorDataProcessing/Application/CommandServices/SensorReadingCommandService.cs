@@ -45,7 +45,13 @@ public class SensorReadingCommandService(
                 && thresholdEvaluationService.IsThresholdExceeded(reading, threshold)
             )
             {
-                // TODO: Send alert
+                await mediator.Publish(new ThresholdExceededEvent(
+                    command.EdgeDeviceMacAddress,
+                    reading.Type,
+                    reading.Value,
+                    threshold.Min,
+                    threshold.Max
+                ));
             }
         }
 
