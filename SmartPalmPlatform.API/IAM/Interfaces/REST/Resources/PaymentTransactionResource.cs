@@ -5,7 +5,6 @@ public record PaymentTransactionResource(
     string periodStart,
     string periodEnd,
     decimal amount,
-    string? transactionId,
     string status,
     string processedAt
 );

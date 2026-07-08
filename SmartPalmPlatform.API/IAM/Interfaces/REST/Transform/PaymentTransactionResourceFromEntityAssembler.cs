@@ -12,7 +12,6 @@ public static class PaymentTransactionResourceFromEntityAssembler
             entity.PeriodStart.ToString("o"),
             entity.PeriodEnd.ToString("o"),
             entity.Amount,
-            entity.TransactionId,
             entity.Status.ToString(),
             entity.ProcessedAt.ToString("o")
         );
