@@ -1,4 +1,5 @@
 using SmartPalmPlatform.API.IAM.Domain.Model.Commands;
+using SmartPalmPlatform.API.IAM.Domain.Model.Enums;
 using SmartPalmPlatform.API.IAM.Domain.Model.Queries;
 using SmartPalmPlatform.API.IAM.Domain.Services;
 
@@ -6,9 +7,9 @@ namespace SmartPalmPlatform.API.IAM.Interfaces.ACL.Services;
 
 public class IamContextFacade(IUserCommandService userCommandService, IUserQueryService userQueryService) : IIamContextFacade
 {
-    public async Task<int> CreateUser(string username, string password)
+    public async Task<int> CreateUser(string username, string password, Role role)
     {
-        var signUpCommand = new SignUpCommand(username, password);
+        var signUpCommand = new SignUpCommand(username, password, role);
         await userCommandService.Handle(signUpCommand);
         var getUserByUsernameQuery = new GetUserByUsernameQuery(username);
         var result = await userQueryService.Handle(getUserByUsernameQuery);

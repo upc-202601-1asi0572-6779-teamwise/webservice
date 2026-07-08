@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using SmartPalmPlatform.API.IAM.Domain.Model.Enums;
 
 namespace SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
 
@@ -10,9 +11,9 @@ namespace SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
  *     This class is used to represent a user
  * </remarks>
  */
-public partial class User(string username, string passwordHash)
+public partial class User(string username, string passwordHash, Role role)
 {
-    public User() : this(string.Empty, string.Empty)
+    public User() : this(string.Empty, string.Empty, Role.Farmer)
     {
     }
 
@@ -20,7 +21,9 @@ public partial class User(string username, string passwordHash)
     public string Username { get; private set; } = username;
 
     [JsonIgnore] public string PasswordHash { get; private set; } = passwordHash;
-    
+
+    public Role Role { get; private set; } = role;
+
     public int? SubscriptionId { get; private set; }
 
     /**
