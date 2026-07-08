@@ -25,9 +25,9 @@ public class FirebaseNotificationService : IFirebaseNotificationService
         if (FirebaseApp.DefaultInstance is null)
         {
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-            var serviceCredential = ServiceAccountCredential.FromServiceAccountData(stream);
+            var credential = GoogleCredential.FromStream(stream);
             FirebaseApp.Create(
-                new AppOptions { Credential = serviceCredential.ToGoogleCredential() }
+                new AppOptions { Credential = credential }
             );
         }
 
