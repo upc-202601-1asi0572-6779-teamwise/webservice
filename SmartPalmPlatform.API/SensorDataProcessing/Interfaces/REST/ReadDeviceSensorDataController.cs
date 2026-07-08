@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
@@ -9,16 +10,17 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/edge-gateways")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available Gateway Sensor Reading endpoints")]
 public class ReadDeviceSensorDataController(
     ISensorReadingCommandService sensorReadingCommandService,
-    ISensorReadingQueryService sensorReadingQueryService,
-    ILogger<ReadDeviceSensorDataController> logger
+    ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost("{gateway-mac}/sensor-readings")]
     [SwaggerOperation(
         Summary = "Submit sensor readings from an edge gateway",
@@ -47,7 +49,7 @@ public class ReadDeviceSensorDataController(
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while submitting sensor readings.");
+            Console.Error.WriteLine($"[SubmitSensorReadings] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }
@@ -92,7 +94,7 @@ public class ReadDeviceSensorDataController(
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while retrieving gateway sensor readings.");
+            Console.Error.WriteLine($"[GetGatewaySensorReadings] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }

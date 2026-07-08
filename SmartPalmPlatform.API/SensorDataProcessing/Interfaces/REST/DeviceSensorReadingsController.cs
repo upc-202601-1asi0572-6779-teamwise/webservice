@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Resources;
@@ -8,13 +9,13 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/devices")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available Device Sensor Reading endpoints")]
 public class DeviceSensorReadingsController(
-    ISensorReadingQueryService sensorReadingQueryService,
-    ILogger<DeviceSensorReadingsController> logger
+    ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
     [HttpGet("{device-mac}/sensor-readings")]
@@ -57,7 +58,7 @@ public class DeviceSensorReadingsController(
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while retrieving device sensor readings.");
+            Console.Error.WriteLine($"[GetDeviceSensorReadings] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }

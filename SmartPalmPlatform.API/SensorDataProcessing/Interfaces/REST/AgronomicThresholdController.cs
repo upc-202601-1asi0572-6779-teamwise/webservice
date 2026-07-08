@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Resources;
@@ -8,16 +9,17 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
+[Authorize(Roles = "Administrator,Agronomist")]
 [ApiController]
 [Route("api/v1/devices")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available Agronomic Threshold endpoints")]
 public class AgronomicThresholdController(
     ISensorReadingCommandService sensorReadingCommandService,
-    IAgronomicThresholdQueryService agronomicThresholdQueryService,
-    ILogger<AgronomicThresholdController> logger
+    IAgronomicThresholdQueryService agronomicThresholdQueryService
 ) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet("{device-mac}/thresholds")]
     [SwaggerOperation(
         Summary = "Get the agronomic thresholds of an IoT device",
@@ -48,7 +50,7 @@ public class AgronomicThresholdController(
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while retrieving thresholds for device.");
+            Console.Error.WriteLine($"[GetThreshold] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }
@@ -89,7 +91,7 @@ public class AgronomicThresholdController(
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while updating threshold for device.");
+            Console.Error.WriteLine($"[UpdateThreshold] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }
