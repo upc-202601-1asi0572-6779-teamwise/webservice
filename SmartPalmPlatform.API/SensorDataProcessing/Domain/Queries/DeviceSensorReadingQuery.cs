@@ -1,10 +1,9 @@
 namespace SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 
-public record SensorReadingQuery(
-    string EdgeDeviceMacAddress,
+public record DeviceSensorReadingQuery(
+    string IotDeviceMacAddress,
     DateTime From,
     DateTime To,
-    string? IotDeviceMacAddress,
     int Page,
     int Size
 );

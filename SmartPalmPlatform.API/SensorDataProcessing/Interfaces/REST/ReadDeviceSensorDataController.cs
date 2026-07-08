@@ -47,7 +47,10 @@ public class ReadDeviceSensorDataController(
     public async Task<IActionResult> GetSensorReadings(
         [FromRoute(Name = "gateway-mac")] string gatewayMac,
         [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to
+        [FromQuery] DateTime? to,
+        [FromQuery(Name = "device-mac")] string? deviceMac,
+        [FromQuery] int page = 1,
+        [FromQuery] int size = 100
     )
     {
         try
@@ -55,7 +58,14 @@ public class ReadDeviceSensorDataController(
             var resolvedFrom = from ?? DateTime.MinValue;
             var resolvedTo   = to   ?? DateTime.MaxValue;
 
-            var query = new SensorReadingQuery(gatewayMac, resolvedFrom, resolvedTo);
+            var query = new SensorReadingQuery(
+                gatewayMac,
+                resolvedFrom,
+                resolvedTo,
+                deviceMac,
+                page,
+                size
+            );
 
             var readings = await sensorReadingQueryService.Handle(query);
             var response = SensorReadingViewResourceFromAggregateAssembler

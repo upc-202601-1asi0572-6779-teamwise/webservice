@@ -47,4 +47,11 @@ public class AgronomicThresholdRepository(AppDbContext context)
             )
             .ToListAsync();
     }
+
+    public async Task<bool> ExistsByIotDeviceMacAddress(string iotDeviceMacAddress)
+    {
+        return await Context
+            .Set<AgronomicThreshold>()
+            .AnyAsync(threshold => threshold.IotDeviceMacAddress.Equals(iotDeviceMacAddress));
+    }
 }
