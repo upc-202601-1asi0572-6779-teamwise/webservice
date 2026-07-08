@@ -1,14 +1,17 @@
+using MediatR;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Commands;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Factory;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Repositories;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.Shared.Domain.Events;
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Application.CommandServices;
 
 public class SensorReadingCommandService(
     IUnitOfWork uow,
+    IMediator mediator,
     ISensorReadingRepository sensorReadingRepository,
     IAgronomicThresholdRepository agronomicThresholdRepository,
     IThresholdEvaluationService thresholdEvaluationService
@@ -33,7 +36,6 @@ public class SensorReadingCommandService(
                 r.Value
             );
             await sensorReadingRepository.AddAsync(reading);
-            await uow.CompleteAsync();
 
             if (!thresholds.TryGetValue(reading.Type, out var threshold))
                 continue;
@@ -46,6 +48,12 @@ public class SensorReadingCommandService(
                 // TODO: Send alert
             }
         }
+
+        await uow.CompleteAsync();
+
+        await mediator.Publish(
+            new SensorReadingsIngestedEvent(command.EdgeDeviceMacAddress, command.SyncedAt)
+        );
     }
 
     public async Task Handle(UpdateAgronomicThresholdCommand command)

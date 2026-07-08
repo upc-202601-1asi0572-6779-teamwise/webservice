@@ -11,20 +11,25 @@ public static class ReadDeviceSensorsDataCommandFromResourceAssembly
         ReadDeviceSensorsDataResource resource
     )
     {
-        var command = new ReadDeviceSensorsDataCommand(
-            edgeMac,
-            resource
-                // TODO(Fase 2): este contrato no trae deviceMac por lectura; se rediseñará
-                // como { devices: [{ deviceMac, readings: [...] }] } para atribuir cada
-                // lectura a su dispositivo IoT de origen.
-                .readings.Select(r => new SensorReadingPayload(
-                    string.Empty,
+        if (resource.devices is null || resource.devices.Count == 0)
+            throw new ArgumentException("At least one device with readings is required.");
+
+        var readings = resource
+            .devices.SelectMany(device =>
+            {
+                if (string.IsNullOrWhiteSpace(device.deviceMac))
+                    throw new ArgumentException("deviceMac is required for every device group.");
+
+                return device.readings.Select(r => new SensorReadingPayload(
+                    device.deviceMac,
                     SensorTypeFromStringAssembler.FromStringToSensorType(r.sensorType),
                     r.measuredAt,
                     r.value
-                ))
-                .ToList()
-        );
+                ));
+            })
+            .ToList();
+
+        var command = new ReadDeviceSensorsDataCommand(edgeMac, readings, resource.syncedAt);
 
         return command;
     }
