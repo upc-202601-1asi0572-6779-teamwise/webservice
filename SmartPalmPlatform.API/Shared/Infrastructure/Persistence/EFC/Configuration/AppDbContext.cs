@@ -6,6 +6,8 @@ using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Entities;
+using SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistence.EFC.Configuration.Extensions;
+using SmartPalmPlatform.API.IAM.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 
 namespace SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
@@ -111,7 +113,10 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         builder.Entity<AgronomicThreshold>().Property(threshold => threshold.Type).IsRequired();
 
         // Apply IAM context configuration
-        //builder.ApplyIamConfiguration();
+        builder.ApplyIamConfiguration();
+
+        // Apply Notifications context configuration
+        builder.ApplyNotificationsConfiguration();
 
         // Agronomic Recommendation Bounded Context Configuration
         builder.Entity<Recommendation>().ToTable("recommendations");
