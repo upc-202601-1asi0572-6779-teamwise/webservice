@@ -17,6 +17,8 @@ public class IotDeviceRegisteredEventHandler(
         CancellationToken cancellationToken
     )
     {
+        Console.WriteLine($"[INFO] [SensorData] [EventHandler] IoT device registered: MAC={notification.IotDeviceMacAddress}, edge={notification.EdgeDeviceMacAddress}");
+        var count = 0;
         foreach (var type in Enum.GetValues<SensorType>())
         {
             var threshold = AgronomicThresholdTypeFactory.DefaultThreshold(
@@ -26,6 +28,8 @@ public class IotDeviceRegisteredEventHandler(
             );
             await agronomicThresholdRepository.AddAsync(threshold);
             await uow.CompleteAsync();
+            count++;
         }
+        Console.WriteLine($"[INFO] [SensorData] [EventHandler] Created {count} default agronomic thresholds for {notification.IotDeviceMacAddress}");
     }
 }

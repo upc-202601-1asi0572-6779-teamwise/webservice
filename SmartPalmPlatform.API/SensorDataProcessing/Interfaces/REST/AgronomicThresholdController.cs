@@ -31,6 +31,7 @@ public class AgronomicThresholdController(
         [FromRoute(Name = "device-mac")] string deviceMac
     )
     {
+        Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] GetThreshold called for deviceMac: {deviceMac}");
         try
         {
             var query = AgronomicThresholdQueryFromResourceAssembly.ToQueryFromResource(deviceMac);
@@ -42,14 +43,17 @@ public class AgronomicThresholdController(
                     result
                 );
 
+            Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] Thresholds retrieved for deviceMac: {deviceMac}");
             return Ok(response);
         }
         catch (Exception e) when (e is KeyNotFoundException)
         {
+            Console.WriteLine($"[WARN] [BC] [AgronomicThreshold] Device not found for thresholds, deviceMac: {deviceMac} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [AgronomicThreshold] Error getting thresholds for deviceMac: {deviceMac} - {e.Message}");
             Console.Error.WriteLine($"[GetThreshold] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
@@ -71,6 +75,7 @@ public class AgronomicThresholdController(
         [FromBody] UpdateAgronomicThresholdResource resource
     )
     {
+        Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] UpdateThreshold called for deviceMac: {deviceMac}");
         try
         {
             var command = UpdateAgronomicThresholdCommandFromResourceAssembly.FromResourceToCommand(
@@ -79,18 +84,22 @@ public class AgronomicThresholdController(
             );
             await sensorReadingCommandService.Handle(command);
 
+            Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] Threshold updated for deviceMac: {deviceMac}");
             return Ok();
         }
         catch (Exception e) when (e is ArgumentException)
         {
+            Console.WriteLine($"[WARN] [BC] [AgronomicThreshold] Invalid threshold data for deviceMac: {deviceMac} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e) when (e is KeyNotFoundException)
         {
+            Console.WriteLine($"[WARN] [BC] [AgronomicThreshold] Device not found for threshold update, deviceMac: {deviceMac} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [AgronomicThreshold] Error updating threshold for deviceMac: {deviceMac} - {e.Message}");
             Console.Error.WriteLine($"[UpdateThreshold] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
