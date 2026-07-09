@@ -30,7 +30,7 @@ public interface IUserQueryService
      * <returns>The list of users</returns>
      */
     Task<IEnumerable<User>> Handle(GetAllUsersQuery query);
-    
+
     /**
      * <summary>
      *     Handle get user by username query

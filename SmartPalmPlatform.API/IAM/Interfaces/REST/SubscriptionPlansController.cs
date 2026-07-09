@@ -23,8 +23,10 @@ public class SubscriptionPlansController : ControllerBase
     [SwaggerResponse(StatusCodes.Status200OK, "Plans found", typeof(IEnumerable<PlanResource>))]
     public IActionResult ListPlans()
     {
+        Console.WriteLine($"[INFO] [BC] [SubscriptionPlans] ListPlans called");
         var plans = SubscriptionPlanProvider.GetAll();
         var resources = plans.Select(PlanResourceFromSubscriptionPlanAssembler.ToResourceFromSubscriptionPlan);
+        Console.WriteLine($"[INFO] [BC] [SubscriptionPlans] Retrieved {resources.Count()} plans");
         return Ok(resources);
     }
 }

@@ -25,19 +25,25 @@ public class UsersController(IUserQueryService userQueryService) : ControllerBas
     [SwaggerResponse(StatusCodes.Status404NotFound, "User not found")]
     public async Task<IActionResult> GetUserById(int id)
     {
+        Console.WriteLine($"[INFO] [IAM] [UsersController] GetUserById({id})");
         try
         {
             var getUserByIdQuery = new GetUserByIdQuery(id);
             var user = await userQueryService.Handle(getUserByIdQuery);
 
             if (user is null)
+            {
+                Console.WriteLine($"[WARN] [IAM] [UsersController] GetUserById({id}) — not found");
                 return NotFound(new { message = "User not found." });
+            }
 
             var userResource = UserResourceFromEntityAssembler.ToResourceFromEntity(user);
+            Console.WriteLine($"[INFO] [IAM] [UsersController] GetUserById({id}) — found '{user.Username}'");
             return Ok(userResource);
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [IAM] [UsersController] GetUserById({id}): {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
@@ -50,15 +56,18 @@ public class UsersController(IUserQueryService userQueryService) : ControllerBas
     [SwaggerResponse(StatusCodes.Status200OK, "The users were found", typeof(IEnumerable<UserResource>))]
     public async Task<IActionResult> GetAllUsers()
     {
+        Console.WriteLine("[INFO] [IAM] [UsersController] GetAllUsers");
         try
         {
             var getAllUsersQuery = new GetAllUsersQuery();
             var users = await userQueryService.Handle(getAllUsersQuery);
             var userResources = users.Select(UserResourceFromEntityAssembler.ToResourceFromEntity);
+            Console.WriteLine($"[INFO] [IAM] [UsersController] GetAllUsers — returning {users.Count()} users");
             return Ok(userResources);
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [IAM] [UsersController] GetAllUsers: {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
