@@ -23,7 +23,6 @@ public static class ModelBuilderExtensions
                 loc.Property(l => l.Coordinates).HasColumnName("coordinates").HasMaxLength(100);
             });
             entity.Property(p => p.Hectares).IsRequired().HasColumnType("decimal(10,2)");
-            entity.Property(p => p.CropType).IsRequired().HasConversion<int>();
             entity.Property(p => p.Status).IsRequired().HasConversion<int>();
             entity.OwnsOne(p => p.InstallationPlan, plan =>
             {

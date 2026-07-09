@@ -15,7 +15,6 @@ public record PlantationDetailResource(
     string address,
     string? coordinates,
     decimal hectares,
-    string cropType,
     string status,
     int estimatedSensors,
     string installationMessage,

@@ -37,11 +37,15 @@ public class PlantationsController(
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid data")]
     public async Task<IActionResult> CreatePlantation([FromBody] CreatePlantationResource resource)
     {
+        Console.WriteLine($"[INFO] [BC] [Plantations] CreatePlantation called");
         try
         {
             var userId = GetCurrentUserId();
             if (userId == 0)
+            {
+                Console.WriteLine($"[WARN] [BC] [Plantations] User not authenticated for CreatePlantation");
                 return Unauthorized(new { message = "User not authenticated." });
+            }
 
             var command = CreatePlantationCommandFromResourceAssembler.ToCommandFromResource(
                 userId,
@@ -49,14 +53,17 @@ public class PlantationsController(
             );
             var plantation = await plantationCommandService.Handle(command);
             var output = PlantationResourceFromEntityAssembler.ToResourceFromEntity(plantation);
+            Console.WriteLine($"[INFO] [BC] [Plantations] Plantation created with id: {plantation.Id} for userId: {userId}");
             return StatusCode(StatusCodes.Status201Created, output);
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [BC] [Plantations] Validation failed creating plantation - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Plantations] Error creating plantation - {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = e.Message }
@@ -73,21 +80,27 @@ public class PlantationsController(
     [SwaggerResponse(StatusCodes.Status200OK, "Plantations found", typeof(IEnumerable<PlantationResource>))]
     public async Task<IActionResult> GetMyPlantations()
     {
+        Console.WriteLine($"[INFO] [BC] [Plantations] GetMyPlantations called");
         try
         {
             var userId = GetCurrentUserId();
             if (userId == 0)
+            {
+                Console.WriteLine($"[WARN] [BC] [Plantations] User not authenticated for GetMyPlantations");
                 return Unauthorized(new { message = "User not authenticated." });
+            }
 
             var query = new GetPlantationsByUserIdQuery(userId);
             var plantations = await plantationQueryService.Handle(query);
             var resources = plantations.Select(
                 PlantationResourceFromEntityAssembler.ToResourceFromEntity
             );
+            Console.WriteLine($"[INFO] [BC] [Plantations] Retrieved {resources.Count()} plantations for userId: {userId}");
             return Ok(resources);
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Plantations] Error getting plantations - {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = e.Message }
@@ -105,18 +118,24 @@ public class PlantationsController(
     [SwaggerResponse(StatusCodes.Status404NotFound, "Plantation not found")]
     public async Task<IActionResult> GetPlantationById(int id)
     {
+        Console.WriteLine($"[INFO] [BC] [Plantations] GetPlantationById called with id: {id}");
         try
         {
             var query = new GetPlantationByIdQuery(id);
             var plantation = await plantationQueryService.Handle(query);
             if (plantation is null)
+            {
+                Console.WriteLine($"[WARN] [BC] [Plantations] Plantation not found with id: {id}");
                 return NotFound(new { message = "Plantation not found." });
+            }
 
             var output = PlantationResourceFromEntityAssembler.ToDetailResourceFromEntity(plantation);
+            Console.WriteLine($"[INFO] [BC] [Plantations] Plantation found with id: {id}");
             return Ok(output);
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Plantations] Error getting plantation by id: {id} - {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = e.Message }
@@ -137,6 +156,7 @@ public class PlantationsController(
         [FromBody] UpdatePlantationResource resource
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Plantations] UpdatePlantation called with id: {id}");
         try
         {
             var command = UpdatePlantationCommandFromResourceAssembler.ToCommandFromResource(
@@ -145,18 +165,22 @@ public class PlantationsController(
             );
             var plantation = await plantationCommandService.Handle(command);
             var output = PlantationResourceFromEntityAssembler.ToResourceFromEntity(plantation);
+            Console.WriteLine($"[INFO] [BC] [Plantations] Plantation updated with id: {id}");
             return Ok(output);
         }
         catch (Exception e) when (e is KeyNotFoundException)
         {
+            Console.WriteLine($"[WARN] [BC] [Plantations] Plantation not found for update, id: {id} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e) when (e is InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [BC] [Plantations] Invalid operation updating plantation id: {id} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Plantations] Error updating plantation id: {id} - {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = e.Message }

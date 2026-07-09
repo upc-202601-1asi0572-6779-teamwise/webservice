@@ -4,6 +4,5 @@ public record CreatePlantationResource(
     string name,
     decimal hectares,
     string address,
-    string? coordinates,
-    string cropType
+    string? coordinates
 );

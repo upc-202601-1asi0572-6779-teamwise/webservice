@@ -13,7 +13,6 @@ public static class PlantationResourceFromEntityAssembler
             entity.Location.Address,
             entity.Location.Coordinates,
             entity.Hectares,
-            entity.CropType.ToString(),
             entity.Status.ToString(),
             entity.InstallationPlan.EstimatedSensors,
             entity.InstallationPlan.Message,
@@ -24,15 +23,12 @@ public static class PlantationResourceFromEntityAssembler
 
     public static PlantationDetailResource ToDetailResourceFromEntity(Plantation entity)
     {
-        // Since Sector isn't a navigation property on Plantation aggregate,
-        // this would normally be populated separately
         return new PlantationDetailResource(
             entity.Id,
             entity.Name,
             entity.Location.Address,
             entity.Location.Coordinates,
             entity.Hectares,
-            entity.CropType.ToString(),
             entity.Status.ToString(),
             entity.InstallationPlan.EstimatedSensors,
             entity.InstallationPlan.Message,

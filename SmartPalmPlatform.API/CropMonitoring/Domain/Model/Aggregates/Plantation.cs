@@ -10,7 +10,6 @@ public class Plantation
     public string Name { get; private set; }
     public PlantationLocation Location { get; private set; }
     public decimal Hectares { get; private set; }
-    public CropType CropType { get; private set; }
     public PlantationStatus Status { get; private set; }
     public InstallationPlan InstallationPlan { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -21,7 +20,6 @@ public class Plantation
         string name,
         PlantationLocation location,
         decimal hectares,
-        CropType cropType,
         InstallationPlan installationPlan
     )
     {
@@ -29,7 +27,6 @@ public class Plantation
         Name = name;
         Location = location;
         Hectares = hectares;
-        CropType = cropType;
         Status = PlantationStatus.Installing;
         InstallationPlan = installationPlan;
         CreatedAt = DateTime.UtcNow;

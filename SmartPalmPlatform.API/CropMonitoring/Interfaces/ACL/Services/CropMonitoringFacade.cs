@@ -12,27 +12,37 @@ public class CropMonitoringFacade(
 {
     public async Task<bool> PlantationExistsAsync(int plantationId)
     {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] PlantationExistsAsync({plantationId})");
         var plantation = await plantationQueryService.Handle(
             new GetPlantationByIdQuery(plantationId)
         );
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] PlantationExistsAsync({plantationId}) → {plantation is not null}");
         return plantation is not null;
     }
 
     public async Task<bool> SectorExistsAsync(int sectorId)
     {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] SectorExistsAsync({sectorId})");
         var sector = await sectorRepository.FindByIdAsync(sectorId);
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] SectorExistsAsync({sectorId}) → {sector is not null}");
         return sector is not null;
     }
 
     public async Task<bool> SectorIsActiveAsync(int sectorId)
     {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] SectorIsActiveAsync({sectorId})");
         var sector = await sectorRepository.FindByIdAsync(sectorId);
-        return sector is not null && sector.Status == SectorStatus.Active;
+        var active = sector is not null && sector.Status == SectorStatus.Active;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] SectorIsActiveAsync({sectorId}) → {active}");
+        return active;
     }
 
     public async Task<bool> PlantationHasActiveSectorsAsync(int plantationId)
     {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] PlantationHasActiveSectorsAsync({plantationId})");
         var sectors = await sectorRepository.FindByPlantationIdAsync(plantationId);
-        return sectors.Any(s => s.Status == SectorStatus.Active);
+        var hasActive = sectors.Any(s => s.Status == SectorStatus.Active);
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] PlantationHasActiveSectorsAsync({plantationId}) → {hasActive} (total sectors: {sectors.Count()})");
+        return hasActive;
     }
 }

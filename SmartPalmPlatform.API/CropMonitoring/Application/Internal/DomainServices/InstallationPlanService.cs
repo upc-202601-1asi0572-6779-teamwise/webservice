@@ -5,9 +5,8 @@ namespace SmartPalmPlatform.API.CropMonitoring.Application.Internal.DomainServic
 
 public class InstallationPlanService : IInstallationPlanService
 {
-    public InstallationPlan CalculatePlan(decimal hectares, string cropType)
+    public InstallationPlan CalculatePlan(decimal hectares)
     {
-        // Base: 1 sensor sector + 1 per each full 10 hectares
         var sensorCount = Math.Max(1, (int)Math.Ceiling(hectares / 10));
 
         var message = sensorCount == 1

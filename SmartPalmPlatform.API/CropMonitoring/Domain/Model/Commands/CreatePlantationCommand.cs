@@ -7,6 +7,5 @@ public record CreatePlantationCommand(
     int PalmGrowerId,
     string Name,
     PlantationLocation Location,
-    decimal Hectares,
-    CropType CropType
+    decimal Hectares
 );

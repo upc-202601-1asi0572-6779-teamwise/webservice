@@ -4,5 +4,5 @@ namespace SmartPalmPlatform.API.CropMonitoring.Domain.Services.DomainServices;
 
 public interface IInstallationPlanService
 {
-    InstallationPlan CalculatePlan(decimal hectares, string cropType);
+    InstallationPlan CalculatePlan(decimal hectares);
 }

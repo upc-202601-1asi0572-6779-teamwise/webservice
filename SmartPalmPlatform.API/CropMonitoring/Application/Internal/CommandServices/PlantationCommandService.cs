@@ -21,17 +21,13 @@ public class PlantationCommandService(
     {
         if (!await iamContextFacade.HasActiveSubscriptionAsync(command.PalmGrowerId))
             throw new InvalidOperationException("User does not have an active subscription.");
-        var plan = installationPlanService.CalculatePlan(
-            command.Hectares,
-            command.CropType.ToString()
-        );
+        var plan = installationPlanService.CalculatePlan(command.Hectares);
 
         var plantation = new Plantation(
             command.PalmGrowerId,
             command.Name,
             command.Location,
             command.Hectares,
-            command.CropType,
             plan
         );
 
