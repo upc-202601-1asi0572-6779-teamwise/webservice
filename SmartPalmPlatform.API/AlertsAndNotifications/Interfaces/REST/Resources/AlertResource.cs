@@ -1,6 +1,7 @@
 namespace SmartPalmPlatform.API.AlertsAndNotifications.Interfaces.REST.Resources;
 
 public record AlertResource(
+    Guid id,
     string sensorType,
     string message,
     string level,

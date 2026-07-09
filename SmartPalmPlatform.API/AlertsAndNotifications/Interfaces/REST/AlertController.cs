@@ -5,6 +5,7 @@ using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.CommandServic
 using SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.AlertsAndNotifications.Interfaces.REST.Resources;
 using SmartPalmPlatform.API.AlertsAndNotifications.Interfaces.REST.Transform;
+using SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -19,14 +20,22 @@ public class AlertController(
     IAlertCommandService alertCommandService,
     IAlertQueryService alertQueryService) : ControllerBase
 {
+    private int GetCurrentUserId()
+    {
+        var user = HttpContext.Items["User"] as User;
+        return user?.Id ?? 0;
+    }
+
     [HttpGet]
     [SwaggerOperation(
-        Summary = "Get alerts by user",
-        Description = "Get all alerts for the specified user.",
-        OperationId = "GetAlertsByUser")]
+        Summary = "Get my alerts",
+        Description = "Get all alerts for the authenticated user.",
+        OperationId = "GetMyAlerts")]
     [SwaggerResponse(StatusCodes.Status200OK, "Alerts found", typeof(IEnumerable<AlertResource>))]
-    public async Task<IActionResult> GetAlerts([FromQuery] int userId)
+    public async Task<IActionResult> GetAlerts()
     {
+        var userId = GetCurrentUserId();
+        if (userId == 0) return Unauthorized(new { message = "User not authenticated." });
         Console.WriteLine($"[INFO] [Alerts] [AlertController] GetAlerts called with userId={userId}");
         try
         {
