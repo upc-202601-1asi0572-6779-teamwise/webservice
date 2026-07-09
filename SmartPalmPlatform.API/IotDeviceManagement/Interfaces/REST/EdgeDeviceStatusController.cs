@@ -28,6 +28,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         [SwaggerResponse(StatusCodes.Status200OK, "The edge gateways were found", typeof(IEnumerable<ConnectivityStatusResource>))]
         public async Task<IActionResult> GetAllGateways()
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetAllGateways called");
             try
             {
                 var devices = await deviceStatusQueryService.Handle(new GetAllEdgeGatewaysQuery());
@@ -36,10 +37,12 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                     ConnectivityStatusResourceFromEdgeDeviceAggregateAssembler.ToResourceFromEdgeDeviceAggregate
                 );
 
+                Console.WriteLine($"[INFO] [BC] [DeviceStatus] Retrieved {response.Count()} gateways");
                 return Ok(response);
             }
             catch (Exception e)
             {
+                Console.WriteLine($"[ERROR] [BC] [DeviceStatus] Error getting all gateways - {e.Message}");
                 Console.Error.WriteLine($"[GetAllGateways] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -59,6 +62,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             [FromRoute(Name = "gateway-mac")] string gatewayMac
         )
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetDevices called for gatewayMac: {gatewayMac}");
             try
             {
                 var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(gatewayMac);
@@ -70,14 +74,17 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                         result.Item2
                     );
 
+                Console.WriteLine($"[INFO] [BC] [DeviceStatus] Retrieved devices for gatewayMac: {gatewayMac}");
                 return Ok(response);
             }
             catch (Exception e) when (e is KeyNotFoundException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceStatus] Edge gateway not found for GetDevices, gatewayMac: {gatewayMac} - {e.Message}");
                 return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {
+                Console.WriteLine($"[ERROR] [BC] [DeviceStatus] Error getting devices for gatewayMac: {gatewayMac} - {e.Message}");
                 Console.Error.WriteLine($"[GetDevices] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -100,6 +107,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             [FromBody] EdgeSynchronizationResource resource
         )
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceStatus] SynchronizeEdge called for gatewayMac: {gatewayMac}");
             try
             {
                 var command = EdgeSynchronizationCommandFromResourceAssembler.ToCommandFromResource(
@@ -107,18 +115,22 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                     resource
                 );
                 await deviceStatusCommandService.Handle(command);
+                Console.WriteLine($"[INFO] [BC] [DeviceStatus] Edge gateway synchronized gatewayMac: {gatewayMac}");
                 return Ok();
             }
             catch (Exception e) when (e is KeyNotFoundException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceStatus] Edge gateway not found for sync, gatewayMac: {gatewayMac} - {e.Message}");
                 return NotFound(new { message = e.Message });
             }
             catch (Exception e) when (e is ArgumentException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceStatus] Invalid sync data for gatewayMac: {gatewayMac} - {e.Message}");
                 return BadRequest(new { message = e.Message });
             }
             catch (Exception e)
             {
+                Console.WriteLine($"[ERROR] [BC] [DeviceStatus] Error synchronizing edge gateway gatewayMac: {gatewayMac} - {e.Message}");
                 Console.Error.WriteLine($"[SynchronizeEdge] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -139,6 +151,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             [FromRoute(Name = "gateway-mac")] string gatewayMac
         )
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetConnectivityStatus called for gatewayMac: {gatewayMac}");
             try
             {
                 var query = ConnectiviyStatusQueryFromResourceAssembler.ToQueryFromResource(
@@ -151,14 +164,17 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                         result
                     );
 
+                Console.WriteLine($"[INFO] [BC] [DeviceStatus] Connectivity status retrieved for gatewayMac: {gatewayMac}");
                 return Ok(response);
             }
             catch (Exception e) when (e is KeyNotFoundException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceStatus] Edge gateway not found for connectivity, gatewayMac: {gatewayMac} - {e.Message}");
                 return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {
+                Console.WriteLine($"[ERROR] [BC] [DeviceStatus] Error getting connectivity status for gatewayMac: {gatewayMac} - {e.Message}");
                 Console.Error.WriteLine($"[GetConnectivityStatus] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -178,6 +194,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             [FromRoute(Name = "gateway-mac")] string gatewayMac
         )
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetDeviceRegistry called for gatewayMac: {gatewayMac}");
             try
             {
                 var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(gatewayMac);
@@ -189,14 +206,17 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                         result.Item2
                     );
 
+                Console.WriteLine($"[INFO] [BC] [DeviceStatus] Device registry retrieved for gatewayMac: {gatewayMac}");
                 return Ok(response);
             }
             catch (Exception e) when (e is KeyNotFoundException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceStatus] Edge gateway not found for registry, gatewayMac: {gatewayMac} - {e.Message}");
                 return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {
+                Console.WriteLine($"[ERROR] [BC] [DeviceStatus] Error getting device registry for gatewayMac: {gatewayMac} - {e.Message}");
                 Console.Error.WriteLine($"[GetDeviceRegistry] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
