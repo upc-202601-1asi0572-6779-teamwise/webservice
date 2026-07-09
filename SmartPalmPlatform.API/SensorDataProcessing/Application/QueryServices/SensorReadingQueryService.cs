@@ -1,3 +1,4 @@
+using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.ACL;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Repositories;
@@ -7,7 +8,8 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Application.QueryServices;
 
 public class SensorReadingQueryService(
     ISensorReadingRepository sensorReadingRepository,
-    IAgronomicThresholdRepository agronomicThresholdRepository
+    IAgronomicThresholdRepository agronomicThresholdRepository,
+    IIotDeviceQueryFacade iotDeviceQueryFacade
 ) : ISensorReadingQueryService
 {
     public async Task<List<SensorReading>> Handle(SensorReadingQuery query)
@@ -31,6 +33,19 @@ public class SensorReadingQueryService(
             throw new KeyNotFoundException(
                 $"IoT device '{query.IotDeviceMacAddress}' not found."
             );
+
+        // 404 en vez de 403 si el dispositivo no pertenece al usuario: evita
+        // confirmar la existencia de dispositivos ajenos por enumeración de MAC.
+        if (query.OwnerUserId.HasValue)
+        {
+            var ownerUserId = await iotDeviceQueryFacade.GetOwnerUserIdByMacAddress(
+                query.IotDeviceMacAddress
+            );
+            if (ownerUserId != query.OwnerUserId.Value)
+                throw new KeyNotFoundException(
+                    $"IoT device '{query.IotDeviceMacAddress}' not found."
+                );
+        }
 
         return await sensorReadingRepository.FindByIotDeviceMacAddressAndMeasureTimeRange(
             query.IotDeviceMacAddress,

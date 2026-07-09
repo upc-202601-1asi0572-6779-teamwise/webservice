@@ -6,4 +6,5 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Domain.Repositories;
 public interface IEdgeDeviceRepository : IBaseRepository<EdgeDevice>
 {
     Task<EdgeDevice?> FindByMacAddress(string EdgeDeviceMacAddress);
+    Task<IEnumerable<EdgeDevice>> ListByUserId(int userId);
 }

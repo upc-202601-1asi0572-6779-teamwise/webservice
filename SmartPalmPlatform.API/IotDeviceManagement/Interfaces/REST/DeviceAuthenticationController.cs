@@ -46,6 +46,11 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
                 Console.WriteLine($"[WARN] [BC] [DeviceAuthentication] Edge gateway already registered or conflict, edgeMac: {resource.edgeMac} - {e.Message}");
                 return Conflict(new { message = e.Message });
             }
+            catch (Exception e) when (e is KeyNotFoundException)
+            {
+                Console.WriteLine($"[WARN] [BC] [DeviceAuthentication] User not found for edge gateway registration, edgeMac: {resource.edgeMac} - {e.Message}");
+                return NotFound(new { message = e.Message });
+            }
             catch (Exception e)
             {
                 Console.WriteLine($"[ERROR] [BC] [DeviceAuthentication] Error registering edge device edgeMac: {resource.edgeMac} - {e.Message}");

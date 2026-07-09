@@ -11,7 +11,8 @@ public static class RegisterEdgeDeviceCommandFromResourceAssembler
     {
         return new RegisterEdgeDeviceCommand(
             resource.edgeMac,
-            resource.monitoringZoneId
+            resource.monitoringZoneId,
+            resource.userId
         );
     }
 }

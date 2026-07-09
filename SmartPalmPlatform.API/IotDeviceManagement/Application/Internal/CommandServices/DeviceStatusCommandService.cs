@@ -1,4 +1,5 @@
 using MediatR;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Commands;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
@@ -14,7 +15,8 @@ public class DeviceStatusCommandService(
     IMediator mediator,
     IIotDeviceRepository iotDeviceRepository,
     IEdgeDeviceRepository edgeDeviceRepository,
-    IEdgeRegistryRepository edgeRegistryRepository
+    IEdgeRegistryRepository edgeRegistryRepository,
+    IIamContextFacade iamContextFacade
 ) : IDeviceStatusCommandService
 {
     public async Task Handle(RegisterEdgeDeviceCommand command)
@@ -23,7 +25,11 @@ public class DeviceStatusCommandService(
         if (device is not null)
             throw new InvalidOperationException("Edge Device already registered.");
 
-        device = new EdgeDevice(command.EdgeDeviceMac, command.MonitoringZoneId);
+        var userExists = await iamContextFacade.UserExistsByIdAsync(command.UserId);
+        if (!userExists)
+            throw new KeyNotFoundException("User not found.");
+
+        device = new EdgeDevice(command.EdgeDeviceMac, command.MonitoringZoneId, command.UserId);
 
         await edgeDeviceRepository.AddAsync(device);
         await uow.CompleteAsync();
@@ -34,6 +40,8 @@ public class DeviceStatusCommandService(
         var edgeDevice = await edgeDeviceRepository.FindByMacAddress(command.EdgeDeviceMac);
         if (edgeDevice is null)
             throw new KeyNotFoundException("Edge Device not found.");
+
+        edgeDevice.EnsureOwnedBy(command.UserId);
 
         var iotDevice = await iotDeviceRepository.FindByMacAddress(command.IotDeviceMac);
         if (iotDevice is not null)
@@ -50,7 +58,7 @@ public class DeviceStatusCommandService(
         await edgeRegistryRepository.AddAsync(registry);
         await uow.CompleteAsync();
 
-        var newIotDevice = new IotDevice(command.EdgeDeviceMac, command.IotDeviceMac);
+        var newIotDevice = new IotDevice(command.EdgeDeviceMac, command.IotDeviceMac, command.UserId);
         await iotDeviceRepository.AddAsync(newIotDevice);
         await uow.CompleteAsync();
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Model.Entities;
 
@@ -14,6 +15,12 @@ public static class ModelBuilderExtensions
         builder.Entity<EdgeDevice>().HasIndex(device => device.MacAddress).IsUnique();
         builder.Entity<EdgeDevice>().Property(device => device.MacAddress).IsRequired();
         builder.Entity<EdgeDevice>().Property(device => device.MonitoringZoneId).IsRequired();
+        builder.Entity<EdgeDevice>().Property(device => device.UserId).IsRequired();
+        builder.Entity<EdgeDevice>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(device => device.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Entity<EdgeDevice>().Property(device => device.LastConnectivityCheckAt).IsRequired();
         builder.Entity<EdgeDevice>().Property(device => device.LastSyncAt).IsRequired();
         builder.Entity<EdgeDevice>().Property(device => device.CreatedAt).IsRequired();
@@ -24,6 +31,12 @@ public static class ModelBuilderExtensions
         builder.Entity<IotDevice>().HasIndex(device => device.MacAddress).IsUnique();
         builder.Entity<IotDevice>().Property(device => device.MacAddress).IsRequired();
         builder.Entity<IotDevice>().Property(device => device.EdgeDeviceMacAddress).IsRequired();
+        builder.Entity<IotDevice>().Property(device => device.UserId).IsRequired();
+        builder.Entity<IotDevice>()
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(device => device.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Entity<IotDevice>().Property(device => device.CreatedAt).IsRequired();
 
         builder.Entity<EdgeRegistry>().ToTable("edge_registry");

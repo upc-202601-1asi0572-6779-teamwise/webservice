@@ -4,8 +4,8 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST.Transform;
 
 public static class EdgeRegistryQueryFromResourceAssembler
 {
-    public static EdgeRegistryQuery ToQueryFromResource(string edgeMac)
+    public static EdgeRegistryQuery ToQueryFromResource(string edgeMac, int? ownerUserId = null)
     {
-        return new EdgeRegistryQuery(edgeMac);
+        return new EdgeRegistryQuery(edgeMac, ownerUserId);
     }
 }

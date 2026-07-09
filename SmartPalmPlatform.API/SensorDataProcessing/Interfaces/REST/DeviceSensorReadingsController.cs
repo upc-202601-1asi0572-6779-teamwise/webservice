@@ -1,5 +1,7 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.IAM.Domain.Model.Enums;
 using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
@@ -18,6 +20,16 @@ public class DeviceSensorReadingsController(
     ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
+    // null = Administrator (sin restricción). Con valor = solo dispositivos de ese
+    // usuario. Fail-closed a 0 si no hay usuario en el contexto (no debería ocurrir
+    // con [Authorize] activo).
+    private int? GetOwnerFilter()
+    {
+        var user = HttpContext.Items["User"] as User;
+        if (user is null) return 0;
+        return user.Role == UserRole.Administrator ? null : user.Id;
+    }
+
     [HttpGet("{device-mac}/sensor-readings")]
     [SwaggerOperation(
         Summary = "Get sensor readings of an IoT device",
@@ -44,7 +56,8 @@ public class DeviceSensorReadingsController(
                 resolvedFrom,
                 resolvedTo,
                 page,
-                size
+                size,
+                GetOwnerFilter()
             );
 
             var readings = await sensorReadingQueryService.Handle(query);

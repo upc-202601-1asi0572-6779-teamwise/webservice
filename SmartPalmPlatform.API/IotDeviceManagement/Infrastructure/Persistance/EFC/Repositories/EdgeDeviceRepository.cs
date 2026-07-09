@@ -16,4 +16,12 @@ public class EdgeDeviceRepository(AppDbContext context)
             .Set<EdgeDevice>()
             .FirstOrDefaultAsync(device => device.MacAddress.Equals(EdgeDeviceMacAddress));
     }
+
+    public async Task<IEnumerable<EdgeDevice>> ListByUserId(int userId)
+    {
+        return await Context
+            .Set<EdgeDevice>()
+            .Where(device => device.UserId == userId)
+            .ToListAsync();
+    }
 }

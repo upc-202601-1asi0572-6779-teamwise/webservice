@@ -11,4 +11,10 @@ public class IotDeviceQueryFacade(
         var device = await iotDeviceRepository.FindByMacAddress(macAddress);
         return device is not null;
     }
+
+    public async Task<int?> GetOwnerUserIdByMacAddress(string macAddress)
+    {
+        var device = await iotDeviceRepository.FindByMacAddress(macAddress);
+        return device?.UserId;
+    }
 }

@@ -1,5 +1,7 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.IAM.Domain.Model.Enums;
 using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Queries;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
@@ -20,6 +22,18 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         IDeviceStatusQueryService deviceStatusQueryService
     ) : ControllerBase
     {
+        // null = Administrator (sin restricción, ve todos los gateways).
+        // Con valor = solo los gateways asignados a ese usuario.
+        // Fail-closed: si por algún motivo no hay usuario en el contexto (no debería
+        // ocurrir con [Authorize] activo), se filtra por un id inexistente (0) en vez
+        // de tratarlo como "sin restricción".
+        private int? GetOwnerFilter()
+        {
+            var user = HttpContext.Items["User"] as User;
+            if (user is null) return 0;
+            return user.Role == UserRole.Administrator ? null : user.Id;
+        }
+
         [HttpGet("")]
         [SwaggerOperation(
             Summary = "Get all edge gateways",
@@ -31,7 +45,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetAllGateways called");
             try
             {
-                var devices = await deviceStatusQueryService.Handle(new GetAllEdgeGatewaysQuery());
+                var devices = await deviceStatusQueryService.Handle(new GetAllEdgeGatewaysQuery(GetOwnerFilter()));
 
                 var response = devices.Select(
                     ConnectivityStatusResourceFromEdgeDeviceAggregateAssembler.ToResourceFromEdgeDeviceAggregate
@@ -65,7 +79,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetDevices called for gatewayMac: {gatewayMac}");
             try
             {
-                var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(gatewayMac);
+                var query = EdgeRegistryQueryFromResourceAssembler.ToQueryFromResource(gatewayMac, GetOwnerFilter());
                 var result = await deviceStatusQueryService.Handle(query);
 
                 var response =
@@ -183,6 +197,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("{gateway-mac}/registry")]
         [SwaggerOperation(
             Summary = "Get the device registry of an edge gateway",
