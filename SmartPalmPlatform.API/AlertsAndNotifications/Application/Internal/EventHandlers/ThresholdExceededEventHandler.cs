@@ -18,6 +18,8 @@ public class ThresholdExceededEventHandler(
 {
     public async Task Handle(ThresholdExceededEvent notification, CancellationToken cancellationToken)
     {
+        Console.WriteLine($"[INFO] [Alerts] [EventHandler] Threshold exceeded: edge={notification.EdgeDeviceMacAddress}, sensor={notification.SensorType}, value={notification.ReadingValue}, range=[{notification.ThresholdMin},{notification.ThresholdMax}]");
+
         var level = classificationService.ClassifySeverity(
             notification.ReadingValue,
             (notification.ThresholdMin + notification.ThresholdMax) / 2
@@ -28,14 +30,21 @@ public class ThresholdExceededEventHandler(
             + $"[{notification.ThresholdMin}, {notification.ThresholdMax}].";
 
         var alert = new Alert(notification.SensorType, 0, message, level);
+        Console.WriteLine($"[INFO] [Alerts] [EventHandler] Creating alert level={level}: {message}");
 
         await alertRepository.AddAsync(alert);
         await unitOfWork.CompleteAsync();
+        Console.WriteLine($"[INFO] [Alerts] [EventHandler] Alert #{alert.Id} saved.");
 
         var setting = await userAlertSettingRepository.FindByUserIdAndSensorTypeAsync(0, notification.SensorType);
         if (setting is not null && setting.IsMuted)
+        {
+            Console.WriteLine($"[INFO] [Alerts] [EventHandler] Notifications muted for sensor type {notification.SensorType}, skipping Firebase.");
             return;
+        }
 
+        Console.WriteLine($"[INFO] [Alerts] [EventHandler] Sending Firebase notification for alert #{alert.Id}...");
         await firebaseNotificationService.SendNotificationAsync(alert);
+        Console.WriteLine($"[INFO] [Alerts] [EventHandler] Firebase notification sent for alert #{alert.Id}.");
     }
 }

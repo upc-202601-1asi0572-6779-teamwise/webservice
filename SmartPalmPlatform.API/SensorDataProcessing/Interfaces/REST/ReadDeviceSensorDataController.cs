@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
@@ -9,16 +10,17 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/edge-gateways")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available Gateway Sensor Reading endpoints")]
 public class ReadDeviceSensorDataController(
     ISensorReadingCommandService sensorReadingCommandService,
-    ISensorReadingQueryService sensorReadingQueryService,
-    ILogger<ReadDeviceSensorDataController> logger
+    ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost("{gateway-mac}/sensor-readings")]
     [SwaggerOperation(
         Summary = "Submit sensor readings from an edge gateway",
@@ -31,6 +33,7 @@ public class ReadDeviceSensorDataController(
         [FromBody] ReadDeviceSensorsDataResource resource
     )
     {
+        Console.WriteLine($"[INFO] [BC] [ReadDeviceSensorData] SubmitSensorReadings called for gatewayMac: {gatewayMac}");
         try
         {
             var command = ReadDeviceSensorsDataCommandFromResourceAssembly.FromResourceToCommand(
@@ -39,15 +42,18 @@ public class ReadDeviceSensorDataController(
             );
             await sensorReadingCommandService.Handle(command);
 
+            Console.WriteLine($"[INFO] [BC] [ReadDeviceSensorData] Sensor readings submitted for gatewayMac: {gatewayMac}");
             return Created($"/api/v1/edge-gateways/{gatewayMac}/sensor-readings", null);
         }
         catch (Exception e) when (e is ArgumentException)
         {
+            Console.WriteLine($"[WARN] [BC] [ReadDeviceSensorData] Invalid sensor readings payload for gatewayMac: {gatewayMac} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while submitting sensor readings.");
+            Console.WriteLine($"[ERROR] [BC] [ReadDeviceSensorData] Error submitting sensor readings for gatewayMac: {gatewayMac} - {e.Message}");
+            Console.Error.WriteLine($"[SubmitSensorReadings] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }
@@ -70,10 +76,11 @@ public class ReadDeviceSensorDataController(
         [FromQuery] int size = 100
     )
     {
+        Console.WriteLine($"[INFO] [BC] [ReadDeviceSensorData] GetSensorReadings called for gatewayMac: {gatewayMac}, deviceMac: {deviceMac}, from: {from}, to: {to}, page: {page}, size: {size}");
         try
         {
             var resolvedFrom = from ?? DateTime.MinValue;
-            var resolvedTo   = to   ?? DateTime.MaxValue;
+            var resolvedTo = to ?? DateTime.MaxValue;
 
             var query = new SensorReadingQuery(
                 gatewayMac,
@@ -88,11 +95,13 @@ public class ReadDeviceSensorDataController(
             var response = SensorReadingViewResourceFromAggregateAssembler
                 .ToResourceListFromAggregateList(readings);
 
+            Console.WriteLine($"[INFO] [BC] [ReadDeviceSensorData] Retrieved {response.Count()} sensor readings for gatewayMac: {gatewayMac}");
             return Ok(response);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while retrieving gateway sensor readings.");
+            Console.WriteLine($"[ERROR] [BC] [ReadDeviceSensorData] Error getting sensor readings for gatewayMac: {gatewayMac} - {e.Message}");
+            Console.Error.WriteLine($"[GetGatewaySensorReadings] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }

@@ -8,6 +8,7 @@ public static class RecommendationResourceFromEntityAssembler
     public static RecommendationResource ToResourceFromEntity(Recommendation recommendation)
     {
         return new RecommendationResource(
+            recommendation.Id,
             recommendation.Content,
             recommendation.Type.ToString(),
             recommendation.Status.ToString(),

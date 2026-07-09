@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Resources;
@@ -8,16 +9,17 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
+[Authorize(Roles = "Administrator,Agronomist")]
 [ApiController]
 [Route("api/v1/devices")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available Agronomic Threshold endpoints")]
 public class AgronomicThresholdController(
     ISensorReadingCommandService sensorReadingCommandService,
-    IAgronomicThresholdQueryService agronomicThresholdQueryService,
-    ILogger<AgronomicThresholdController> logger
+    IAgronomicThresholdQueryService agronomicThresholdQueryService
 ) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet("{device-mac}/thresholds")]
     [SwaggerOperation(
         Summary = "Get the agronomic thresholds of an IoT device",
@@ -29,6 +31,7 @@ public class AgronomicThresholdController(
         [FromRoute(Name = "device-mac")] string deviceMac
     )
     {
+        Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] GetThreshold called for deviceMac: {deviceMac}");
         try
         {
             var query = AgronomicThresholdQueryFromResourceAssembly.ToQueryFromResource(deviceMac);
@@ -40,15 +43,18 @@ public class AgronomicThresholdController(
                     result
                 );
 
+            Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] Thresholds retrieved for deviceMac: {deviceMac}");
             return Ok(response);
         }
         catch (Exception e) when (e is KeyNotFoundException)
         {
+            Console.WriteLine($"[WARN] [BC] [AgronomicThreshold] Device not found for thresholds, deviceMac: {deviceMac} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while retrieving thresholds for device.");
+            Console.WriteLine($"[ERROR] [BC] [AgronomicThreshold] Error getting thresholds for deviceMac: {deviceMac} - {e.Message}");
+            Console.Error.WriteLine($"[GetThreshold] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }
@@ -69,6 +75,7 @@ public class AgronomicThresholdController(
         [FromBody] UpdateAgronomicThresholdResource resource
     )
     {
+        Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] UpdateThreshold called for deviceMac: {deviceMac}");
         try
         {
             var command = UpdateAgronomicThresholdCommandFromResourceAssembly.FromResourceToCommand(
@@ -77,19 +84,23 @@ public class AgronomicThresholdController(
             );
             await sensorReadingCommandService.Handle(command);
 
+            Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] Threshold updated for deviceMac: {deviceMac}");
             return Ok();
         }
         catch (Exception e) when (e is ArgumentException)
         {
+            Console.WriteLine($"[WARN] [BC] [AgronomicThreshold] Invalid threshold data for deviceMac: {deviceMac} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e) when (e is KeyNotFoundException)
         {
+            Console.WriteLine($"[WARN] [BC] [AgronomicThreshold] Device not found for threshold update, deviceMac: {deviceMac} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while updating threshold for device.");
+            Console.WriteLine($"[ERROR] [BC] [AgronomicThreshold] Error updating threshold for deviceMac: {deviceMac} - {e.Message}");
+            Console.Error.WriteLine($"[UpdateThreshold] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }

@@ -55,7 +55,7 @@ public class DeviceStatusCommandService(
         await uow.CompleteAsync();
 
         await mediator.Publish(
-            new IotDeviceRegisteredEvent(command.EdgeDeviceMac, command.IotDeviceMac)
+            new IotDeviceRegisteredEvent(command.EdgeDeviceMac, command.IotDeviceMac, command.PlantationId)
         );
     }
 

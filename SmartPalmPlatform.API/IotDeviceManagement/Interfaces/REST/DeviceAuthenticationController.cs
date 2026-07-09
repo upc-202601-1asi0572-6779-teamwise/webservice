@@ -14,8 +14,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
     [ApiController]
     [SwaggerTag("Available Edge Gateway Registration endpoints")]
     public class DeviceAuthenticationController(
-        IDeviceStatusCommandService deviceStatusCommandService,
-        ILogger<DeviceAuthenticationController> logger
+        IDeviceStatusCommandService deviceStatusCommandService
     ) : ControllerBase
     {
         [HttpPost("")]
@@ -30,6 +29,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             [FromBody] EdgeDeviceRegistrationResource resource
         )
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceAuthentication] RegisterEdgeDevice called with edgeMac: {resource.edgeMac}");
             try
             {
                 var command = RegisterEdgeDeviceCommandFromResourceAssembler.ToCommandFromResource(
@@ -38,15 +38,18 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 
                 await deviceStatusCommandService.Handle(command);
 
+                Console.WriteLine($"[INFO] [BC] [DeviceAuthentication] Edge device registered with edgeMac: {resource.edgeMac}");
                 return Created($"/api/v1/edge-gateways/{resource.edgeMac}", null);
             }
             catch (Exception e) when (e is InvalidOperationException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceAuthentication] Edge gateway already registered or conflict, edgeMac: {resource.edgeMac} - {e.Message}");
                 return Conflict(new { message = e.Message });
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while registering edge device.");
+                Console.WriteLine($"[ERROR] [BC] [DeviceAuthentication] Error registering edge device edgeMac: {resource.edgeMac} - {e.Message}");
+                Console.Error.WriteLine($"[RegisterEdgeDevice] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }
@@ -68,6 +71,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             [FromBody] IotDeviceRegistrationResource resource
         )
         {
+            Console.WriteLine($"[INFO] [BC] [DeviceAuthentication] RegisterIotDevice called for gatewayMac: {gatewayMac}, iotMac: {resource.iotMac}");
             try
             {
                 var command = RegisterIotDeviceCommandFromResourceAssembler.ToCommandFromResource(
@@ -77,6 +81,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
 
                 await deviceStatusCommandService.Handle(command);
 
+                Console.WriteLine($"[INFO] [BC] [DeviceAuthentication] IoT device registered gatewayMac: {gatewayMac}, iotMac: {resource.iotMac}");
                 return Created(
                     $"/api/v1/edge-gateways/{gatewayMac}/iot-devices/{resource.iotMac}",
                     null
@@ -84,15 +89,18 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
             catch (Exception e) when (e is InvalidOperationException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceAuthentication] IoT device already registered or conflict, gatewayMac: {gatewayMac}, iotMac: {resource.iotMac} - {e.Message}");
                 return Conflict(new { message = e.Message });
             }
             catch (Exception e) when (e is KeyNotFoundException)
             {
+                Console.WriteLine($"[WARN] [BC] [DeviceAuthentication] Edge gateway not found for IoT registration, gatewayMac: {gatewayMac} - {e.Message}");
                 return NotFound(new { message = e.Message });
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Unexpected error while registering IoT device.");
+                Console.WriteLine($"[ERROR] [BC] [DeviceAuthentication] Error registering IoT device gatewayMac: {gatewayMac}, iotMac: {resource.iotMac} - {e.Message}");
+                Console.Error.WriteLine($"[RegisterIotDevice] {e.GetType().Name}: {e.Message}");
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "An unexpected error occurred." }

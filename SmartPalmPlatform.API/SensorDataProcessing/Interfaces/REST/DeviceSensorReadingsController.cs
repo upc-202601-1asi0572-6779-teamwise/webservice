@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST.Resources;
@@ -8,13 +9,13 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/devices")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available Device Sensor Reading endpoints")]
 public class DeviceSensorReadingsController(
-    ISensorReadingQueryService sensorReadingQueryService,
-    ILogger<DeviceSensorReadingsController> logger
+    ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
     [HttpGet("{device-mac}/sensor-readings")]
@@ -32,6 +33,7 @@ public class DeviceSensorReadingsController(
         [FromQuery] int size = 100
     )
     {
+        Console.WriteLine($"[INFO] [BC] [DeviceSensorReadings] GetSensorReadings called for deviceMac: {deviceMac}, from: {from}, to: {to}, page: {page}, size: {size}");
         try
         {
             var resolvedFrom = from ?? DateTime.MinValue;
@@ -49,15 +51,18 @@ public class DeviceSensorReadingsController(
             var response = SensorReadingViewResourceFromAggregateAssembler
                 .ToResourceListFromAggregateList(readings);
 
+            Console.WriteLine($"[INFO] [BC] [DeviceSensorReadings] Retrieved {response.Count()} sensor readings for deviceMac: {deviceMac}");
             return Ok(response);
         }
         catch (Exception e) when (e is KeyNotFoundException)
         {
+            Console.WriteLine($"[WARN] [BC] [DeviceSensorReadings] Device not found for sensor readings, deviceMac: {deviceMac} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unexpected error while retrieving device sensor readings.");
+            Console.WriteLine($"[ERROR] [BC] [DeviceSensorReadings] Error getting sensor readings for deviceMac: {deviceMac} - {e.Message}");
+            Console.Error.WriteLine($"[GetDeviceSensorReadings] {e.GetType().Name}: {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = "An unexpected error occurred." }

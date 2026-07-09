@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using SmartPalmPlatform.API.IAM.Infrastructure.Pipeline.Middleware.Attributes;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Commands;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
@@ -9,6 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST;
 
+[Authorize]
 [Route("api/v1/plantations")]
 [Produces(MediaTypeNames.Application.Json)]
 [ApiController]
@@ -30,22 +32,28 @@ public class RecommendationsController(
         [FromRoute] int recommendationId
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Recommendations] GetRecommendationById called for plantationId: {plantationId}, recommendationId: {recommendationId}");
         try
         {
             var query = new GetRecommendationByIdQuery(recommendationId);
             var recommendation = await recommendationQueryService.Handle(query);
 
             if (recommendation is null || recommendation.PlantationId != plantationId)
+            {
+                Console.WriteLine($"[WARN] [BC] [Recommendations] Recommendation not found for plantationId: {plantationId}, recommendationId: {recommendationId}");
                 return NotFound(new { message = "Recommendation not found." });
+            }
 
             var resource = RecommendationResourceFromEntityAssembler.ToResourceFromEntity(
                 recommendation
             );
 
+            Console.WriteLine($"[INFO] [BC] [Recommendations] Recommendation found for plantationId: {plantationId}, recommendationId: {recommendationId}");
             return Ok(resource);
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Recommendations] Error getting recommendation plantationId: {plantationId}, recommendationId: {recommendationId} - {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = e.Message }
@@ -66,6 +74,7 @@ public class RecommendationsController(
         [FromQuery] int? agronomistId
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Recommendations] GetRecommendations called for plantationId: {plantationId}, status: {status}, agronomistId: {agronomistId}");
         try
         {
             var query = GetPlantationRecommendationsFromResourceAssembler.ToQueryFromResource(
@@ -79,14 +88,17 @@ public class RecommendationsController(
                 RecommendationResourceFromEntityAssembler.ToResourceFromEntity
             );
 
+            Console.WriteLine($"[INFO] [BC] [Recommendations] Retrieved {resources.Count()} recommendations for plantationId: {plantationId}");
             return Ok(resources);
         }
         catch (Exception e) when (e is ArgumentException)
         {
+            Console.WriteLine($"[WARN] [BC] [Recommendations] Invalid status filter for plantationId: {plantationId} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Recommendations] Error getting recommendations for plantationId: {plantationId} - {e.Message}");
             return StatusCode(
                 StatusCodes.Status500InternalServerError,
                 new { message = e.Message }
@@ -106,6 +118,7 @@ public class RecommendationsController(
         [FromBody] CreateRecommendationResource resource
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Recommendations] CreateRecommendation called for plantationId: {plantationId}");
         try
         {
             var command = CreateRecommendationCommandFromResourceAssembler.ToCommandFromResource(
@@ -119,17 +132,20 @@ public class RecommendationsController(
                 recommendation
             );
 
+            Console.WriteLine($"[INFO] [BC] [Recommendations] Recommendation created with id: {recommendation.Id} for plantationId: {plantationId}");
             return Created(
                 $"/api/v1/plantations/{plantationId}/recommendations/{recommendation.Id}",
                 response
             );
         }
-        catch (Exception e) when (e is ArgumentException)
+        catch (Exception e) when (e is ArgumentException or InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [BC] [Recommendations] Validation failed creating recommendation for plantationId: {plantationId} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Recommendations] Error creating recommendation for plantationId: {plantationId} - {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
@@ -149,13 +165,17 @@ public class RecommendationsController(
         [FromBody] UpdateRecommendationContentResource resource
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Recommendations] UpdateRecommendationContent called for plantationId: {plantationId}, recommendationId: {recommendationId}");
         try
         {
             var existing = await recommendationQueryService.Handle(
                 new GetRecommendationByIdQuery(recommendationId)
             );
             if (existing is null || existing.PlantationId != plantationId)
+            {
+                Console.WriteLine($"[WARN] [BC] [Recommendations] Recommendation not found for update, plantationId: {plantationId}, recommendationId: {recommendationId}");
                 return NotFound(new { message = "Recommendation not found." });
+            }
 
             var command = UpdateRecommendationContentCommandFromResourceAssembler.ToCommandFromResource(
                 recommendationId,
@@ -168,18 +188,22 @@ public class RecommendationsController(
                 recommendation
             );
 
+            Console.WriteLine($"[INFO] [BC] [Recommendations] Recommendation content updated for recommendationId: {recommendationId}");
             return Ok(response);
         }
         catch (Exception e) when (e is ArgumentException)
         {
+            Console.WriteLine($"[WARN] [BC] [Recommendations] Invalid argument updating recommendation recommendationId: {recommendationId} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e) when (e is InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [BC] [Recommendations] Invalid operation updating recommendation recommendationId: {recommendationId} - {e.Message}");
             return Conflict(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Recommendations] Error updating recommendation recommendationId: {recommendationId} - {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
@@ -197,13 +221,17 @@ public class RecommendationsController(
         [FromRoute] int recommendationId
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Recommendations] ApproveRecommendation called for plantationId: {plantationId}, recommendationId: {recommendationId}");
         try
         {
             var existing = await recommendationQueryService.Handle(
                 new GetRecommendationByIdQuery(recommendationId)
             );
             if (existing is null || existing.PlantationId != plantationId)
+            {
+                Console.WriteLine($"[WARN] [BC] [Recommendations] Recommendation not found for approval, plantationId: {plantationId}, recommendationId: {recommendationId}");
                 return NotFound(new { message = "Recommendation not found." });
+            }
 
             var command = new ApproveRecommendationCommand(recommendationId);
             var recommendation = await recommendationCommandService.Handle(command);
@@ -212,14 +240,17 @@ public class RecommendationsController(
                 recommendation
             );
 
+            Console.WriteLine($"[INFO] [BC] [Recommendations] Recommendation approved for recommendationId: {recommendationId}");
             return Ok(response);
         }
         catch (Exception e) when (e is InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [BC] [Recommendations] Cannot approve recommendation recommendationId: {recommendationId} - {e.Message}");
             return Conflict(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Recommendations] Error approving recommendation recommendationId: {recommendationId} - {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
@@ -237,13 +268,17 @@ public class RecommendationsController(
         [FromRoute] int recommendationId
     )
     {
+        Console.WriteLine($"[INFO] [BC] [Recommendations] PublishRecommendation called for plantationId: {plantationId}, recommendationId: {recommendationId}");
         try
         {
             var existing = await recommendationQueryService.Handle(
                 new GetRecommendationByIdQuery(recommendationId)
             );
             if (existing is null || existing.PlantationId != plantationId)
+            {
+                Console.WriteLine($"[WARN] [BC] [Recommendations] Recommendation not found for publication, plantationId: {plantationId}, recommendationId: {recommendationId}");
                 return NotFound(new { message = "Recommendation not found." });
+            }
 
             var command = new PublishRecommendationCommand(recommendationId);
             var recommendation = await recommendationCommandService.Handle(command);
@@ -252,106 +287,19 @@ public class RecommendationsController(
                 recommendation
             );
 
+            Console.WriteLine($"[INFO] [BC] [Recommendations] Recommendation published for recommendationId: {recommendationId}");
             return Ok(response);
         }
         catch (Exception e) when (e is InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [BC] [Recommendations] Cannot publish recommendation recommendationId: {recommendationId} - {e.Message}");
             return Conflict(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [BC] [Recommendations] Error publishing recommendation recommendationId: {recommendationId} - {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
 
-    [HttpPost("{plantationId:int}/recommendations/{recommendationId:int}/interventions")]
-    [SwaggerOperation(
-        Summary = "Registers an agronomic intervention for a specific recommendation.",
-        Description = "This endpoint allows the registration of an agronomic intervention associated with a specific recommendation within a plantation. The intervention details are provided in the request body.",
-        OperationId = "RegisterIntervention")]
-    [SwaggerResponse(StatusCodes.Status201Created, "Intervention created", typeof(RegisterAgronomicInterventionResource), ContentTypes = new []{"application/json"})]
-    [SwaggerResponse(StatusCodes.Status400BadRequest, "Intervention not created. Invalid request.")]
-    [SwaggerResponse(StatusCodes.Status404NotFound, "The recommendation was not found")]
-    [SwaggerResponse(StatusCodes.Status409Conflict, "The intervention cannot be registered in the recommendation's current status")]
-    public async Task<IActionResult> RegisterIntervention(
-        [FromRoute] int plantationId,
-        [FromRoute] int recommendationId,
-        [FromBody] RegisterAgronomicInterventionResource resource
-    )
-    {
-        try
-        {
-            var existing = await recommendationQueryService.Handle(
-                new GetRecommendationByIdQuery(recommendationId)
-            );
-            if (existing is null || existing.PlantationId != plantationId)
-                return NotFound(new { message = "Recommendation not found." });
-
-            var command = RegisterAgronomicInterventionCommandFromResourceAssembler.ToCommandFromResource(
-                recommendationId,
-                resource
-            );
-
-            var intervention = await recommendationCommandService.Handle(command);
-
-            var response = AgronomicInterventionResourceFromEntityAssembler.ToResourceFromEntity(
-                intervention
-            );
-
-            return Created(
-                $"/api/v1/plantations/{plantationId}/recommendations/{recommendationId}/interventions/{intervention.Id}",
-                response
-            );
-        }
-        catch (Exception e) when (e is ArgumentException)
-        {
-            return BadRequest(new { message = e.Message });
-        }
-        catch (Exception e) when (e is InvalidOperationException)
-        {
-            return Conflict(new { message = e.Message });
-        }
-        catch (Exception e)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
-        }
-    }
-
-    [HttpGet("{plantationId:int}/recommendations/{recommendationId:int}/interventions")]
-    [SwaggerOperation(
-        Summary = "Get the interventions of a recommendation",
-        Description = "Returns the agronomic interventions registered for a specific recommendation.",
-        OperationId = "GetInterventionsByRecommendationId")]
-    [SwaggerResponse(StatusCodes.Status200OK, "The interventions were found", typeof(IEnumerable<AgronomicInterventionResource>))]
-    [SwaggerResponse(StatusCodes.Status404NotFound, "The recommendation was not found")]
-    public async Task<IActionResult> GetInterventionsByRecommendationId(
-        [FromRoute] int plantationId,
-        [FromRoute] int recommendationId
-    )
-    {
-        try
-        {
-            var existing = await recommendationQueryService.Handle(
-                new GetRecommendationByIdQuery(recommendationId)
-            );
-            if (existing is null || existing.PlantationId != plantationId)
-                return NotFound(new { message = "Recommendation not found." });
-
-            var query = new GetInterventionsByRecommendationIdQuery(recommendationId);
-            var interventions = await recommendationQueryService.Handle(query);
-
-            var resources = interventions.Select(
-                AgronomicInterventionResourceFromEntityAssembler.ToResourceFromEntity
-            );
-
-            return Ok(resources);
-        }
-        catch (Exception e)
-        {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { message = e.Message }
-            );
-        }
-    }
 }

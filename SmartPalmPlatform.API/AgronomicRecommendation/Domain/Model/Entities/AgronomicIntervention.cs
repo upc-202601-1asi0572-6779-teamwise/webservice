@@ -6,6 +6,10 @@ public class AgronomicIntervention
 
     public int RecommendationId { get; private set; }
 
+    public int PlantationId { get; private set; }
+
+    public int? ZoneId { get; private set; }
+
     public string Description { get; private set; }
 
     public string PerformedBy { get; private set; }
@@ -16,6 +20,17 @@ public class AgronomicIntervention
 
     public AgronomicIntervention(
         int recommendationId,
+        string description,
+        string performedBy,
+        DateTime executionDate
+    ) : this(recommendationId, 0, null, description, performedBy, executionDate)
+    {
+    }
+
+    public AgronomicIntervention(
+        int recommendationId,
+        int plantationId,
+        int? zoneId,
         string description,
         string performedBy,
         DateTime executionDate
@@ -31,6 +46,8 @@ public class AgronomicIntervention
             throw new ArgumentException("PerformedBy cannot be empty.");
 
         RecommendationId = recommendationId;
+        PlantationId = plantationId;
+        ZoneId = zoneId;
         Description = description;
         PerformedBy = performedBy;
         ExecutionDate = executionDate;

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
-using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Entities;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Enums;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
@@ -26,22 +25,6 @@ public class RecommendationRepository(AppDbContext context)
             .Set<Recommendation>()
             .Where(recommendation => recommendation.PlantationId == plantationId)
             .OrderByDescending(recommendation => recommendation.CreatedAt)
-            .ToListAsync();
-    }
-
-    public async Task AddInterventionAsync(AgronomicIntervention intervention)
-    {
-        await Context.Set<AgronomicIntervention>().AddAsync(intervention);
-    }
-
-    public async Task<IEnumerable<AgronomicIntervention>> FindInterventionsByRecommendationIdAsync(
-        int recommendationId
-    )
-    {
-        return await Context
-            .Set<AgronomicIntervention>()
-            .Where(intervention => intervention.RecommendationId == recommendationId)
-            .OrderByDescending(intervention => intervention.ExecutionDate)
             .ToListAsync();
     }
 
