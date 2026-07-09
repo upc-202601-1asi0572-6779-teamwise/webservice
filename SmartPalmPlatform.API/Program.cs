@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
-using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL;
-using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
+using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL;
+using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.EventHandlers;
@@ -28,6 +28,11 @@ using SmartPalmPlatform.API.CropMonitoring.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.CropMonitoring.Infrastructure.Persistence.EFC.Repositories;
 using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL;
 using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL.Services;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Repositories;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Services;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Infrastructure.Persistance.EFC.Repositories;
 using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
@@ -67,11 +72,6 @@ using SmartPalmPlatform.API.SensorDataProcessing.Infraestructure.Persistance.EFC
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.CommandServices;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.QueryServices;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Repositories;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Services;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Infrastructure.Persistance.EFC.Repositories;
 
 Console.WriteLine("[INFO] [Startup] SmartPalm Platform API initializing...");
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -167,7 +167,10 @@ builder.Services.AddScoped<IRecommendationFacade, RecommendationFacade>();
 
 // Field Technical Management Bounded Context Injection Configuration
 builder.Services.AddScoped<IAgronomicInterventionRepository, JpaAgronomicInterventionRepository>();
-builder.Services.AddScoped<IAgronomicInterventionCommandService, AgronomicInterventionCommandService>();
+builder.Services.AddScoped<
+    IAgronomicInterventionCommandService,
+    AgronomicInterventionCommandService
+>();
 builder.Services.AddScoped<IAgronomicInterventionQueryService, AgronomicInterventionQueryService>();
 
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
@@ -202,10 +205,13 @@ builder.Services.AddScoped<IInstallationPlanService, InstallationPlanService>();
 builder.Services.AddScoped<ICropMonitoringFacade, CropMonitoringFacade>();
 
 Console.WriteLine("[INFO] [Startup] DI registrations complete. Registering event handlers...");
+
 // Event Handlers
 builder.Services.AddMediatR(config =>
 {
-    config.RegisterServicesFromAssemblyContaining(typeof(CropMonitoringIotDeviceRegisteredEventHandler));
+    config.RegisterServicesFromAssemblyContaining(
+        typeof(CropMonitoringIotDeviceRegisteredEventHandler)
+    );
     config.RegisterServicesFromAssemblyContaining(typeof(ThresholdExceededEventHandler));
     config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
 });
@@ -260,28 +266,9 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        if (isProduction)
-        {
-            var pendingMigrations = context.Database.GetPendingMigrations().ToList();
-            Console.WriteLine($"[INFO] [Database] Pending migrations: {string.Join(", ", pendingMigrations)}");
-
-            if (pendingMigrations.Any())
-            {
-                Console.WriteLine("[INFO] [Database] Applying migrations...");
-                context.Database.Migrate();
-                Console.WriteLine("[INFO] [Database] Migrations applied successfully.");
-            }
-            else
-            {
-                Console.WriteLine("[INFO] [Database] No pending migrations found.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("[INFO] [Database] Ensuring MySQL schema is created...");
-            context.Database.EnsureCreated();
-            Console.WriteLine("[INFO] [Database] Schema ready.");
-        }
+        Console.WriteLine("[INFO] [Database] Ensuring MySQL schema is created...");
+        context.Database.EnsureCreated();
+        Console.WriteLine("[INFO] [Database] Schema ready.");
 
         Console.WriteLine("[INFO] [Database] Running seed...");
         SeedAdmin(context);
@@ -316,25 +303,10 @@ static void SeedAdmin(AppDbContext context)
     {
         Console.WriteLine("[INFO] [Seed] Admin user already exists, skipping.");
     }
-
-    // Seed active subscription for admin if none exists
-    Console.WriteLine("[INFO] [Seed] Checking admin subscription...");
-    if (!context.Set<Subscription>().Any())
-    {
-        var adminUser = context.Set<User>().First(u => u.Role == UserRole.Administrator);
-        var sub = SubscriptionFactory.CreateSubscription(adminUser.Id, PlanType.Seed);
-        sub.Activate();
-        context.Set<Subscription>().Add(sub);
-        context.SaveChanges();
-        Console.WriteLine("[INFO] [Seed] Admin subscription created (Active — Seed plan).");
-    }
-    else
-    {
-        Console.WriteLine("[INFO] [Seed] Subscription already exists, skipping.");
-    }
 }
 
 Console.WriteLine("[INFO] [Startup] Configuring HTTP pipeline...");
+
 // Configure the HTTP request pipeline.
 if (!isProduction)
 {
