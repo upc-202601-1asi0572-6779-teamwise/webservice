@@ -50,11 +50,11 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(text))
             return text;
 
-        
+
         text = Regex.Replace(text, "([A-Z]+)([A-Z][a-z])", "$1-$2");
-        
+
         text = Regex.Replace(text, "([a-z0-9])([A-Z])", "$1-$2");
-        
+
         return text.ToLower();
     }
 }
