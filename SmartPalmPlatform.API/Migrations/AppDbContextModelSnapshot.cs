@@ -218,6 +218,11 @@ namespace SmartPalmPlatform.API.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("edge_device_mac_address");
 
+                    b.Property<string>("IotDeviceMacAddress")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("iot_device_mac_address");
+
                     b.Property<DateTime>("MeasuredAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("measured_at");
@@ -236,6 +241,9 @@ namespace SmartPalmPlatform.API.Migrations
 
                     b.HasKey("Id")
                         .HasName("p_k_sensor_readings");
+
+                    b.HasIndex("IotDeviceMacAddress", "MeasuredAt")
+                        .HasDatabaseName("i_x_sensor_readings_iot_device_mac_address_measured_at");
 
                     b.ToTable("sensor_readings", (string)null);
                 });

@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 
-public record AgronomicThresholdQuery(string EdgeDeviceMacAddress, string IotDeviceMacAddresses);
+public record AgronomicThresholdQuery(string IotDeviceMacAddress);

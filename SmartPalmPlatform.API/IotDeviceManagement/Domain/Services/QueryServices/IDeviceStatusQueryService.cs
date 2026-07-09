@@ -8,4 +8,5 @@ public interface IDeviceStatusQueryService
 {
     Task<EdgeDevice> Handle(ConnectiviyStatusQuery query);
     Task<Tuple<EdgeDevice, List<EdgeRegistry>>> Handle(EdgeRegistryQuery query);
+    Task<IEnumerable<EdgeDevice>> Handle(GetAllEdgeGatewaysQuery query);
 }

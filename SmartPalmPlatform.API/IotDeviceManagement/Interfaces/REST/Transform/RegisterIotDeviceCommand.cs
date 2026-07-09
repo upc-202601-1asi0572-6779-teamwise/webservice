@@ -13,8 +13,7 @@ public static class RegisterIotDeviceCommandFromResourceAssembler
         return new RegisterIotDeviceCommand(
             edgeDeviceMac,
             resource.iotMac,
-            resource.username,
-            resource.password
+            resource.plantationId
         );
     }
 }

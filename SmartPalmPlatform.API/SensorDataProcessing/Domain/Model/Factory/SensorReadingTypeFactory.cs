@@ -8,6 +8,7 @@ public static class SensorReadingTypeFactory
 {
     public static SensorReading DefaultSensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         SensorType type,
         DateTime measuredAt,
         double value
@@ -16,15 +17,40 @@ public static class SensorReadingTypeFactory
         switch (type)
         {
             case SensorType.Humidity:
-                return HumiditySensorReading(edgeDeviceMacAddress, measuredAt, value);
+                return HumiditySensorReading(
+                    edgeDeviceMacAddress,
+                    iotDeviceMacAddress,
+                    measuredAt,
+                    value
+                );
             case SensorType.PH:
-                return PHSensorReading(edgeDeviceMacAddress, measuredAt, value);
+                return PHSensorReading(
+                    edgeDeviceMacAddress,
+                    iotDeviceMacAddress,
+                    measuredAt,
+                    value
+                );
             case SensorType.Luminosity:
-                return LuminositySensorReading(edgeDeviceMacAddress, measuredAt, value);
+                return LuminositySensorReading(
+                    edgeDeviceMacAddress,
+                    iotDeviceMacAddress,
+                    measuredAt,
+                    value
+                );
             case SensorType.Temperature:
-                return TemperatureSensorReading(edgeDeviceMacAddress, measuredAt, value);
+                return TemperatureSensorReading(
+                    edgeDeviceMacAddress,
+                    iotDeviceMacAddress,
+                    measuredAt,
+                    value
+                );
             case SensorType.SoilMoisture:
-                return SoilMoistureSensorReading(edgeDeviceMacAddress, measuredAt, value);
+                return SoilMoistureSensorReading(
+                    edgeDeviceMacAddress,
+                    iotDeviceMacAddress,
+                    measuredAt,
+                    value
+                );
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -32,12 +58,14 @@ public static class SensorReadingTypeFactory
 
     public static SensorReading HumiditySensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         DateTime measuredAt,
         double value
     )
     {
         return new SensorReading(
             edgeDeviceMacAddress,
+            iotDeviceMacAddress,
             measuredAt,
             SensorType.Humidity,
             MeasureUnit.Percent,
@@ -47,12 +75,14 @@ public static class SensorReadingTypeFactory
 
     public static SensorReading PHSensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         DateTime measuredAt,
         double value
     )
     {
         return new SensorReading(
             edgeDeviceMacAddress,
+            iotDeviceMacAddress,
             measuredAt,
             SensorType.PH,
             MeasureUnit.Unknown,
@@ -62,12 +92,14 @@ public static class SensorReadingTypeFactory
 
     public static SensorReading LuminositySensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         DateTime measuredAt,
         double value
     )
     {
         return new SensorReading(
             edgeDeviceMacAddress,
+            iotDeviceMacAddress,
             measuredAt,
             SensorType.Luminosity,
             MeasureUnit.Unknown,
@@ -77,12 +109,14 @@ public static class SensorReadingTypeFactory
 
     public static SensorReading TemperatureSensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         DateTime measuredAt,
         double value
     )
     {
         return new SensorReading(
             edgeDeviceMacAddress,
+            iotDeviceMacAddress,
             measuredAt,
             SensorType.Temperature,
             MeasureUnit.Unknown,
@@ -92,12 +126,14 @@ public static class SensorReadingTypeFactory
 
     public static SensorReading SoilMoistureSensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         DateTime measuredAt,
         double value
     )
     {
         return new SensorReading(
             edgeDeviceMacAddress,
+            iotDeviceMacAddress,
             measuredAt,
             SensorType.SoilMoisture,
             MeasureUnit.Percent,

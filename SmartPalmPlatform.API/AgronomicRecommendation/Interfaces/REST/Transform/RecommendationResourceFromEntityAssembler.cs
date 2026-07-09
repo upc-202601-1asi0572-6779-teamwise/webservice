@@ -9,8 +9,6 @@ public static class RecommendationResourceFromEntityAssembler
     {
         return new RecommendationResource(
             recommendation.Id,
-            recommendation.PlantationId,
-            recommendation.AgronomistId,
             recommendation.Content,
             recommendation.Type.ToString(),
             recommendation.Status.ToString(),

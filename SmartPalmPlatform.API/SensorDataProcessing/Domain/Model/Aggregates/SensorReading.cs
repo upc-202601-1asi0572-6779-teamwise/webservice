@@ -7,6 +7,7 @@ public class SensorReading
 {
     public int Id { get; set; } = 0;
     public string EdgeDeviceMacAddress { get; set; } = string.Empty;
+    public string IotDeviceMacAddress { get; set; } = string.Empty;
     public DateTime MeasuredAt { get; set; } = DateTime.Now;
     public SensorType Type { get; set; } = SensorType.Humidity;
     public MeasureUnit Unit { get; set; } = MeasureUnit.Unknown;
@@ -16,6 +17,7 @@ public class SensorReading
 
     public SensorReading(
         string edgeDeviceMacAddress,
+        string iotDeviceMacAddress,
         DateTime measuredAt,
         SensorType type,
         MeasureUnit unit,
@@ -23,6 +25,7 @@ public class SensorReading
     )
     {
         this.EdgeDeviceMacAddress = edgeDeviceMacAddress;
+        this.IotDeviceMacAddress = iotDeviceMacAddress;
         this.MeasuredAt = measuredAt;
         this.Type = type;
         this.Unit = unit;

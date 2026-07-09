@@ -2,8 +2,6 @@ namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Resource
 
 public record RecommendationResource(
     int id,
-    int plantationId,
-    int agronomistId,
     string content,
     string type,
     string status,
