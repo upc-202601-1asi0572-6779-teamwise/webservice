@@ -1,5 +1,4 @@
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
-using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Entities;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Enums;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
@@ -37,15 +36,6 @@ public class RecommendationQueryService(IRecommendationRepository recommendation
     public async Task<Recommendation?> Handle(GetRecommendationByIdQuery query)
     {
         return await recommendationRepository.FindByIdAsync(query.RecommendationId);
-    }
-
-    public async Task<IEnumerable<AgronomicIntervention>> Handle(
-        GetInterventionsByRecommendationIdQuery query
-    )
-    {
-        return await recommendationRepository.FindInterventionsByRecommendationIdAsync(
-            query.RecommendationId
-        );
     }
 }
 
