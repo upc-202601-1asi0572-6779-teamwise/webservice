@@ -17,30 +17,36 @@ public class CropMonitoringIotDeviceRegisteredEventHandler(
         CancellationToken cancellationToken
     )
     {
-        var existing = await sectorRepository.FindByIotDeviceMacAddressAsync(
-            notification.IotDeviceMacAddress
-        );
-        if (existing is not null)
-            return;
-
         var plantation = await plantationRepository.FindByIdWithSectorsAsync(
             notification.PlantationId
         );
-        if (plantation is null)
+        if (plantation is null || plantation.Status == Domain.Model.Enums.PlantationStatus.Cancelled)
             return;
 
-        if (plantation.Status == Domain.Model.Enums.PlantationStatus.Cancelled)
-            return;
-
-        var sector = new Sector(
-            notification.PlantationId,
-            $"Sector-{notification.IotDeviceMacAddress}",
+        var existing = await sectorRepository.FindByIotDeviceMacAddressAsync(
             notification.IotDeviceMacAddress
         );
-        sector.Activate();
 
-        await sectorRepository.AddAsync(sector);
-        await uow.CompleteAsync();
+        if (existing is not null)
+        {
+            if (existing.Status == Domain.Model.Enums.SectorStatus.Pending)
+            {
+                existing.Activate();
+                sectorRepository.Update(existing);
+                await uow.CompleteAsync();
+            }
+        }
+        else
+        {
+            var sector = new Sector(
+                notification.PlantationId,
+                $"Sector-{notification.IotDeviceMacAddress}",
+                notification.IotDeviceMacAddress
+            );
+            sector.Activate();
+            await sectorRepository.AddAsync(sector);
+            await uow.CompleteAsync();
+        }
 
         var sectorCount = (await sectorRepository.FindByPlantationIdAsync(notification.PlantationId)).Count;
         if (sectorCount >= plantation.InstallationPlan.EstimatedSensors

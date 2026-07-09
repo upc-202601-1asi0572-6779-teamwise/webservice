@@ -10,6 +10,7 @@ public record SectorResource(
 );
 
 public record PlantationDetailResource(
+    int id,
     string name,
     string address,
     string? coordinates,

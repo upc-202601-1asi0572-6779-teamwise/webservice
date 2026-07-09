@@ -8,6 +8,7 @@ public static class PlantationResourceFromEntityAssembler
     public static PlantationResource ToResourceFromEntity(Plantation entity)
     {
         return new PlantationResource(
+            entity.Id,
             entity.Name,
             entity.Location.Address,
             entity.Location.Coordinates,
@@ -26,6 +27,7 @@ public static class PlantationResourceFromEntityAssembler
         // Since Sector isn't a navigation property on Plantation aggregate,
         // this would normally be populated separately
         return new PlantationDetailResource(
+            entity.Id,
             entity.Name,
             entity.Location.Address,
             entity.Location.Coordinates,

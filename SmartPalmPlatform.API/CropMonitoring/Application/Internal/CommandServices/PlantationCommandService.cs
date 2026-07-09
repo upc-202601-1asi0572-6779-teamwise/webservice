@@ -4,6 +4,7 @@ using SmartPalmPlatform.API.CropMonitoring.Domain.Model.Entities;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Repositories;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.DomainServices;
+using SmartPalmPlatform.API.IAM.Interfaces.ACL;
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 
 namespace SmartPalmPlatform.API.CropMonitoring.Application.Internal.CommandServices;
@@ -12,11 +13,14 @@ public class PlantationCommandService(
     IUnitOfWork uow,
     IPlantationRepository plantationRepository,
     ISectorRepository sectorRepository,
-    IInstallationPlanService installationPlanService
+    IInstallationPlanService installationPlanService,
+    IIamContextFacade iamContextFacade
 ) : IPlantationCommandService
 {
     public async Task<Plantation> Handle(CreatePlantationCommand command)
     {
+        if (!await iamContextFacade.HasActiveSubscriptionAsync(command.PalmGrowerId))
+            throw new InvalidOperationException("User does not have an active subscription.");
         var plan = installationPlanService.CalculatePlan(
             command.Hectares,
             command.CropType.ToString()
