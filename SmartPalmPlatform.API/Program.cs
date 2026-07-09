@@ -136,6 +136,12 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // IAM Bounded Context
 builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+var tokenSecret = builder.Configuration["TokenSettings:Secret"];
+if (string.IsNullOrEmpty(tokenSecret))
+{
+    Console.WriteLine("[FATAL] [Startup] TokenSettings:Secret is not configured. Set the 'TokenSettings__Secret' environment variable or add it to appsettings.json.");
+    throw new InvalidOperationException("TokenSettings:Secret is not configured. Set the 'TokenSettings__Secret' environment variable or add it to appsettings.json.");
+}
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
