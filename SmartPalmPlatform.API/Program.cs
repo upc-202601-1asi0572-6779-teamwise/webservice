@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
+using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL;
+using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.CommandServices;
@@ -24,12 +26,15 @@ using SmartPalmPlatform.API.CropMonitoring.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.DomainServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.CropMonitoring.Infrastructure.Persistence.EFC.Repositories;
+using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL;
+using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.QueryServices;
 using SmartPalmPlatform.API.IAM.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.IAM.Domain.Model.Enums;
+using SmartPalmPlatform.API.IAM.Domain.Model.Factory;
 using SmartPalmPlatform.API.IAM.Domain.Repositories;
 using SmartPalmPlatform.API.IAM.Domain.Services;
 using SmartPalmPlatform.API.IAM.Domain.Services.CommandServices;
@@ -62,13 +67,17 @@ using SmartPalmPlatform.API.SensorDataProcessing.Infraestructure.Persistance.EFC
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
-using Swashbuckle.AspNetCore.Annotations;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Repositories;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Services;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Infrastructure.Persistance.EFC.Repositories;
 
-// Npgsql 6+ rejects DateTime with Kind=Local for 'timestamp with time zone'.
-// This switch restores the pre-v6 behavior so Local datetimes are accepted.
+Console.WriteLine("[INFO] [Startup] SmartPalm Platform API initializing...");
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine("[INFO] [Startup] WebApplication builder created.");
 
 // Detect production environment (Render sets PORT and RENDER env vars)
 var isProduction =
@@ -80,17 +89,16 @@ if (isProduction)
 {
     var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-    Console.WriteLine($"Production mode - Port: {port}");
+    Console.WriteLine($"[INFO] [Startup] Production mode — binding to port {port}");
 }
 else
 {
-    Console.WriteLine("Development mode - http://localhost:5055");
+    Console.WriteLine("[INFO] [Startup] Development mode — http://localhost:5055");
 }
 
-// Add services to the container.
 builder.Services.AddControllers();
 
-// Configure Database Context and Logging Levels
+Console.WriteLine("[INFO] [Startup] Configuring database context...");
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (!isProduction)
@@ -103,11 +111,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
             .LogTo(Console.WriteLine, LogLevel.Information)
             .EnableSensitiveDataLogging()
             .EnableDetailedErrors();
+        Console.WriteLine("[INFO] [Startup] Using MySQL (development)");
     }
     else
     {
-        // Render provides DATABASE_URL as a URI (postgresql://user:pass@host/db)
-        // Npgsql requires key=value format, so we convert it
         var rawUrl =
             Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? builder.Configuration.GetConnectionString("ProductionConnection")
@@ -115,17 +122,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         var connectionString = ParseDatabaseUrl(rawUrl);
         options
             .UseNpgsql(connectionString)
-            // Suppress type-mapping diff between MySQL snapshot and Npgsql provider
             .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
             .LogTo(Console.WriteLine, LogLevel.Error)
             .EnableDetailedErrors();
+        Console.WriteLine("[INFO] [Startup] Using PostgreSQL (production)");
     }
 });
 
-// Configure Lowercase URLS
+Console.WriteLine("[INFO] [Startup] Registering dependency injection services...");
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-// Injection Configuration
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // IAM Bounded Context
@@ -157,6 +163,12 @@ builder.Services.AddScoped<IEdgeRegistryRepository, EdgeRegistryRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
 builder.Services.AddScoped<IRecommendationCommandService, RecommendationCommandService>();
 builder.Services.AddScoped<IRecommendationQueryService, RecommendationQueryService>();
+builder.Services.AddScoped<IRecommendationFacade, RecommendationFacade>();
+
+// Field Technical Management Bounded Context Injection Configuration
+builder.Services.AddScoped<IAgronomicInterventionRepository, JpaAgronomicInterventionRepository>();
+builder.Services.AddScoped<IAgronomicInterventionCommandService, AgronomicInterventionCommandService>();
+builder.Services.AddScoped<IAgronomicInterventionQueryService, AgronomicInterventionQueryService>();
 
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
 builder.Services.AddScoped<IDeviceStatusQueryService, DeviceStatusQueryService>();
@@ -187,7 +199,9 @@ builder.Services.AddScoped<ISectorRepository, SectorRepository>();
 builder.Services.AddScoped<IPlantationCommandService, PlantationCommandService>();
 builder.Services.AddScoped<IPlantationQueryService, PlantationQueryService>();
 builder.Services.AddScoped<IInstallationPlanService, InstallationPlanService>();
+builder.Services.AddScoped<ICropMonitoringFacade, CropMonitoringFacade>();
 
+Console.WriteLine("[INFO] [Startup] DI registrations complete. Registering event handlers...");
 // Event Handlers
 builder.Services.AddMediatR(config =>
 {
@@ -236,6 +250,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+Console.WriteLine("[INFO] [Startup] Application built. Initializing database...");
 
 // Verify Database Objects are created
 using (var scope = app.Services.CreateScope())
@@ -248,32 +263,34 @@ using (var scope = app.Services.CreateScope())
         if (isProduction)
         {
             var pendingMigrations = context.Database.GetPendingMigrations().ToList();
-            Console.WriteLine($"Pending migrations: {string.Join(", ", pendingMigrations)}");
+            Console.WriteLine($"[INFO] [Database] Pending migrations: {string.Join(", ", pendingMigrations)}");
 
             if (pendingMigrations.Any())
             {
-                Console.WriteLine("Applying migrations...");
+                Console.WriteLine("[INFO] [Database] Applying migrations...");
                 context.Database.Migrate();
-                Console.WriteLine("Database migrations applied successfully.");
+                Console.WriteLine("[INFO] [Database] Migrations applied successfully.");
             }
             else
             {
-                Console.WriteLine("No pending migrations found.");
+                Console.WriteLine("[INFO] [Database] No pending migrations found.");
             }
         }
         else
         {
-            Console.WriteLine("Development mode: creating MySQL schema from model...");
+            Console.WriteLine("[INFO] [Database] Ensuring MySQL schema is created...");
             context.Database.EnsureCreated();
-            Console.WriteLine("Database schema ready.");
+            Console.WriteLine("[INFO] [Database] Schema ready.");
         }
 
+        Console.WriteLine("[INFO] [Database] Running seed...");
         SeedAdmin(context);
+        Console.WriteLine("[INFO] [Database] Seed complete.");
     }
     catch (Exception ex)
     {
         Console.Error.WriteLine(
-            $"Error applying database schema: {ex.GetType().Name}: {ex.Message}"
+            $"[ERROR] [Database] Schema error: {ex.GetType().Name}: {ex.Message}"
         );
         throw;
     }
@@ -281,25 +298,48 @@ using (var scope = app.Services.CreateScope())
 
 static void SeedAdmin(AppDbContext context)
 {
-    if (context.Set<User>().Any(u => u.Role == UserRole.Administrator))
-        return;
+    Console.WriteLine("[INFO] [Seed] Checking admin user...");
+    if (!context.Set<User>().Any(u => u.Role == UserRole.Administrator))
+    {
+        var admin = new User(
+            "admin",
+            BCrypt.Net.BCrypt.HashPassword("admin"),
+            "admin@smartpalm.com",
+            "System Administrator",
+            UserRole.Administrator
+        );
+        context.Set<User>().Add(admin);
+        context.SaveChanges();
+        Console.WriteLine("[INFO] [Seed] Admin user created (admin/admin).");
+    }
+    else
+    {
+        Console.WriteLine("[INFO] [Seed] Admin user already exists, skipping.");
+    }
 
-    var admin = new User(
-        "admin",
-        BCrypt.Net.BCrypt.HashPassword("admin"),
-        "admin@smartpalm.com",
-        "System Administrator",
-        UserRole.Administrator
-    );
-    context.Set<User>().Add(admin);
-    context.SaveChanges();
-    Console.WriteLine("Admin user seeded.");
+    // Seed active subscription for admin if none exists
+    Console.WriteLine("[INFO] [Seed] Checking admin subscription...");
+    if (!context.Set<Subscription>().Any())
+    {
+        var adminUser = context.Set<User>().First(u => u.Role == UserRole.Administrator);
+        var sub = SubscriptionFactory.CreateSubscription(adminUser.Id, PlanType.Seed);
+        sub.Activate();
+        context.Set<Subscription>().Add(sub);
+        context.SaveChanges();
+        Console.WriteLine("[INFO] [Seed] Admin subscription created (Active — Seed plan).");
+    }
+    else
+    {
+        Console.WriteLine("[INFO] [Seed] Subscription already exists, skipping.");
+    }
 }
 
+Console.WriteLine("[INFO] [Startup] Configuring HTTP pipeline...");
 // Configure the HTTP request pipeline.
 if (!isProduction)
 {
     app.MapOpenApi();
+    Console.WriteLine("[INFO] [Startup] OpenAPI mapped (development).");
 }
 
 app.UseSwagger();
@@ -308,34 +348,44 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartPalm API V1");
     c.RoutePrefix = string.Empty;
 });
+Console.WriteLine("[INFO] [Startup] Swagger UI configured.");
 
 app.UseCors("AllowAll");
+Console.WriteLine("[INFO] [Startup] CORS policy 'AllowAll' applied.");
 
 // Render terminates TLS at the load balancer
 if (!isProduction)
 {
     app.UseHttpsRedirection();
+    Console.WriteLine("[INFO] [Startup] HTTPS redirect enabled.");
 }
 
 // Request authorization middleware must come before UseAuthorization()
 app.UseRequestAuthorization();
+Console.WriteLine("[INFO] [Startup] Request authorization middleware registered.");
+
 app.UseAuthorization();
 
 // Apply authorization to all controllers (except sign-in/sign-up which are handled by IAM)
 app.MapControllers();
+Console.WriteLine("[INFO] [Startup] Controllers mapped.");
 
-Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
+Console.WriteLine($"[INFO] [Startup] Environment: {app.Environment.EnvironmentName}");
 if (isProduction)
 {
     var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    Console.WriteLine($"Swagger: http://0.0.0.0:{port}");
+    Console.WriteLine($"[INFO] [Startup] Listening on http://0.0.0.0:{port}");
+    Console.WriteLine($"[INFO] [Startup] Swagger at http://0.0.0.0:{port}");
 }
 else
 {
-    Console.WriteLine("Swagger: http://localhost:5055/swagger");
+    Console.WriteLine("[INFO] [Startup] Listening on http://localhost:5055");
+    Console.WriteLine("[INFO] [Startup] Swagger at http://localhost:5055/swagger");
 }
 
+Console.WriteLine("[INFO] [Startup] Application started.");
 app.Run();
+Console.WriteLine("[INFO] [Shutdown] Application stopped.");
 
 // Converts postgresql://user:pass@host:port/db → Host=...;Username=...;Password=...;Database=...
 static string ParseDatabaseUrl(string databaseUrl)
