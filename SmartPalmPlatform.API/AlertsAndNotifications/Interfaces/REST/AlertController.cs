@@ -27,15 +27,18 @@ public class AlertController(
     [SwaggerResponse(StatusCodes.Status200OK, "Alerts found", typeof(IEnumerable<AlertResource>))]
     public async Task<IActionResult> GetAlerts([FromQuery] int userId)
     {
+        Console.WriteLine($"[INFO] [Alerts] [AlertController] GetAlerts called with userId={userId}");
         try
         {
             var query = new GetAlertsByUserIdQuery(userId);
             var alerts = await alertQueryService.Handle(query);
             var resources = alerts.Select(AlertResourceFromEntityAssembler.ToResourceFromEntity);
+            Console.WriteLine($"[INFO] [Alerts] [AlertController] Retrieved {resources.Count()} alerts for userId={userId}");
             return Ok(resources);
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [Alerts] [AlertController] GetAlerts error for userId={userId}: {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
@@ -49,23 +52,28 @@ public class AlertController(
     [SwaggerResponse(StatusCodes.Status404NotFound, "Alert not found")]
     public async Task<IActionResult> AcknowledgeAlert([FromBody] AcknowledgeAlertResource resource)
     {
+        Console.WriteLine($"[INFO] [Alerts] [AlertController] AcknowledgeAlert called with alertId: {resource.alertId}");
         try
         {
             var command = AcknowledgeAlertCommandFromResourceAssembler.ToCommandFromResource(resource);
             var alert = await alertCommandService.Handle(command);
             var alertResource = AlertResourceFromEntityAssembler.ToResourceFromEntity(alert);
+            Console.WriteLine($"[INFO] [Alerts] [AlertController] Alert acknowledged with id: {alert.Id}");
             return Ok(alertResource);
         }
         catch (KeyNotFoundException e)
         {
+            Console.WriteLine($"[WARN] [Alerts] [AlertController] Alert not found for acknowledge, alertId: {resource.alertId} - {e.Message}");
             return NotFound(new { message = e.Message });
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException)
         {
+            Console.WriteLine($"[WARN] [Alerts] [AlertController] Invalid acknowledge request for alertId: {resource.alertId} - {e.Message}");
             return BadRequest(new { message = e.Message });
         }
         catch (Exception e)
         {
+            Console.WriteLine($"[ERROR] [Alerts] [AlertController] Error acknowledging alert alertId: {resource.alertId} - {e.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = e.Message });
         }
     }
