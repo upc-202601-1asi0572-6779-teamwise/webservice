@@ -52,47 +52,28 @@ public class UserCommandService(
      *     Handle sign-up command
      * </summary>
      * <param name="command">The sign-up command</param>
-     * <returns>A confirmation message on successful creation.</returns>
+     * <returns>The created user.</returns>
      */
-    public async Task Handle(SignUpCommand command)
+    public async Task<User> Handle(SignUpCommand command)
     {
-        try
-        {
-            Console.WriteLine($"[INFO] IAM [UserCommandService] Sign-up attempt for username: {command.Username}");
+        if (string.IsNullOrWhiteSpace(command.Username) || string.IsNullOrWhiteSpace(command.Password))
+            throw new ArgumentException("Username and password cannot be empty");
 
-            if (string.IsNullOrWhiteSpace(command.Username) || string.IsNullOrWhiteSpace(command.Password))
-                throw new ArgumentException("Username and password cannot be empty");
+        if (userRepository.ExistsByUsername(command.Username))
+            throw new ArgumentException($"Username {command.Username} is already taken");
 
-            Console.WriteLine("[INFO] IAM [UserCommandService] Checking if username exists...");
-            if (userRepository.ExistsByUsername(command.Username))
-            {
-                Console.WriteLine($"[WARN] IAM [UserCommandService] Sign-up failed: username {command.Username} already taken");
-                throw new Exception($"Username {command.Username} is already taken");
-            }
+        var validRole = Enum.TryParse<UserRole>(command.Role, true, out var role);
+        if (!validRole) throw new ArgumentException("Invalid role from list: Agronomist, PalmGrower");
 
-            Console.WriteLine("[INFO] IAM [UserCommandService] Hashing password...");
-            var hashedPassword = hashingService.HashPassword(command.Password);
+        if (role == UserRole.Administrator)
+            throw new ArgumentException("Administrator accounts cannot be created via sign-up.");
 
-            Console.WriteLine("[INFO] IAM [UserCommandService] Creating user object...");
-            var validRole = Enum.TryParse<UserRole>(command.Role, true, out var role);
-            if (!validRole) throw new ArgumentException("Invalid role from list: Agronomist, PalmGrower");
+        var hashedPassword = hashingService.HashPassword(command.Password);
+        var user = new User(command.Username, hashedPassword, command.Email, command.FullName, role);
 
-            if (role == UserRole.Administrator)
-                throw new ArgumentException("Administrator accounts cannot be created via sign-up.");
-            var user = new User(command.Username, hashedPassword, command.Email, command.FullName, role);
+        await userRepository.AddAsync(user);
+        await unitOfWork.CompleteAsync();
 
-            Console.WriteLine("[INFO] IAM [UserCommandService] Adding user to repository...");
-            await userRepository.AddAsync(user);
-
-            Console.WriteLine("[INFO] IAM [UserCommandService] Completing transaction...");
-            await unitOfWork.CompleteAsync();
-
-            Console.WriteLine($"[INFO] IAM [UserCommandService] Sign-up successful for username: {command.Username}");
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"[ERROR] IAM [UserCommandService] Sign-up Exception: {e.GetType().Name} - {e.Message}");
-            throw new Exception($"An error occurred while creating user: {e.Message}");
-        }
+        return user;
     }
 }

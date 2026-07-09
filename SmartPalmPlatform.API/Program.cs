@@ -55,6 +55,8 @@ using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.DomainServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.IotDeviceManagement.Infrastructure.Persistance.EFC.Repositories;
+using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.ACL;
+using SmartPalmPlatform.API.IotDeviceManagement.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.SensorDataProcessing.Application.CommandServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Application.DomainServices;
 using SmartPalmPlatform.API.SensorDataProcessing.Application.EventHandlers;
@@ -135,7 +137,7 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // IAM Bounded Context
-builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
@@ -158,6 +160,7 @@ builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IEdgeDeviceRepository, EdgeDeviceRepository>();
 builder.Services.AddScoped<IEdgeRegistryRepository, EdgeRegistryRepository>();
+builder.Services.AddScoped<IIotDeviceQueryFacade, IotDeviceQueryFacade>();
 
 // Agronomic Recommendation Bounded Context Injection Configuration
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
@@ -235,10 +238,12 @@ builder.Services.AddSwaggerGen(options =>
         "Bearer",
         new OpenApiSecurityScheme
         {
+            In = ParameterLocation.Header,
             Description =
                 "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter your token in the text input below.\r\n\r\nExample: \"12345abcdef\"",
             Name = "Authorization",
             Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
             Scheme = "bearer",
         }
     );

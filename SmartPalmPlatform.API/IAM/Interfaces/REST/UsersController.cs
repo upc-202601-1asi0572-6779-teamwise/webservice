@@ -14,8 +14,38 @@ namespace SmartPalmPlatform.API.IAM.Interfaces.REST;
 [Route("api/v1/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Available User endpoints")]
-public class UsersController(IUserQueryService userQueryService) : ControllerBase
+public class UsersController(
+    IUserQueryService userQueryService,
+    IUserCommandService userCommandService
+) : ControllerBase
 {
+    [HttpPost]
+    [SwaggerOperation(
+        Summary = "Create a user",
+        Description = "Creates a new user account. Administrator-only: users cannot self-register.",
+        OperationId = "CreateUser")]
+    [SwaggerResponse(StatusCodes.Status201Created, "The user was created successfully", typeof(UserResource))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid registration data")]
+    public async Task<IActionResult> CreateUser([FromBody] SignUpResource resource)
+    {
+        try
+        {
+            var command = SignUpCommandFromResourceAssembler.ToCommandFromResource(resource);
+            var user = await userCommandService.Handle(command);
+            var userResource = UserResourceFromEntityAssembler.ToResourceFromEntity(user);
+
+            return Created(string.Empty, userResource);
+        }
+        catch (Exception e) when (e is ArgumentException)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { message = e.Message });
+        }
+    }
+
     [HttpGet("{id}")]
     [SwaggerOperation(
         Summary = "Get user by id",

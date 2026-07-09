@@ -27,7 +27,7 @@ public interface IUserCommandService
         *     Handle sign up command
         * </summary>
         * <param name="command">The sign up command</param>
-        * <returns>A confirmation message on successful creation.</returns>
+        * <returns>The created user.</returns>
         */
-    Task Handle(SignUpCommand command);
+    Task<User> Handle(SignUpCommand command);
 }
