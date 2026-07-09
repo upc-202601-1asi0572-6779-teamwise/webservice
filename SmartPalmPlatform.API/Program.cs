@@ -124,7 +124,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         var connectionString = ParseDatabaseUrl(rawUrl);
         options
             .UseNpgsql(connectionString)
-            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
             .LogTo(Console.WriteLine, LogLevel.Error)
             .EnableDetailedErrors();
         Console.WriteLine("[INFO] [Startup] Using PostgreSQL (production)");
