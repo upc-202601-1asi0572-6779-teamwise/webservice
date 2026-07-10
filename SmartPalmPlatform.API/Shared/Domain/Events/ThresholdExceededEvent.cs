@@ -5,6 +5,7 @@ namespace SmartPalmPlatform.API.Shared.Domain.Events;
 
 public record ThresholdExceededEvent(
     string EdgeDeviceMacAddress,
+    string IotDeviceMacAddress,
     SensorType SensorType,
     double ReadingValue,
     double ThresholdMin,

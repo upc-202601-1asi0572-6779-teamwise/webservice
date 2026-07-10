@@ -50,6 +50,7 @@ public class SensorReadingCommandService(
             {
                 await mediator.Publish(new ThresholdExceededEvent(
                     command.EdgeDeviceMacAddress,
+                    reading.IotDeviceMacAddress,
                     reading.Type,
                     reading.Value,
                     threshold.Min,
