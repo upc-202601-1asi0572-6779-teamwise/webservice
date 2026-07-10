@@ -10,6 +10,10 @@ public interface IAgronomicInterventionRepository : IBaseRepository<AgronomicInt
         DateTime? startDate = null,
         DateTime? endDate = null
     );
-
+    Task<IEnumerable<AgronomicIntervention>> FindByPlantationIdAsync(
+        int plantationId,
+        DateTime? startDate = null,
+        DateTime? endDate = null
+    );
     Task<IEnumerable<AgronomicIntervention>> FindByRecommendationIdAsync(int recommendationId);
 }

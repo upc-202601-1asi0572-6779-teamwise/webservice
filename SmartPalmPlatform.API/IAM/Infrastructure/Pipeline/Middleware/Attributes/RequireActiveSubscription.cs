@@ -10,6 +10,13 @@ public class RequireActiveSubscription : Attribute, IAsyncAuthorizationFilter
 {
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
+        var endpoint = context.HttpContext.GetEndpoint();
+        if (endpoint is not null
+            && endpoint.Metadata.Any(m => m.GetType() == typeof(AllowAnonymousAttribute)))
+        {
+            return;
+        }
+
         var user = context.HttpContext.Items["User"] as User;
 
         if (user is null)

@@ -31,12 +31,8 @@ public static class GetSectorRecommendationsFromResourceAssembler
 
     private static RecommendationStatus StatusFromString(string status)
     {
-        return status switch
-        {
-            "pending" => RecommendationStatus.Pending,
-            "approved" => RecommendationStatus.Approved,
-            "published" => RecommendationStatus.Published,
-            _ => throw new ArgumentException($"Invalid status '{status}'. Valid values: pending, approved, published."),
-        };
+        if (Enum.TryParse<RecommendationStatus>(status, ignoreCase: true, out var parsed))
+            return parsed;
+        throw new ArgumentException($"Invalid status '{status}'. Valid values: Pending, Approved, Published (case-insensitive).");
     }
 }

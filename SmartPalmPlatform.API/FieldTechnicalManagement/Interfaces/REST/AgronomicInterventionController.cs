@@ -74,4 +74,35 @@ public class AgronomicInterventionController(
         var resource = AgronomicInterventionResourceFromEntityAssembler.ToResourceFromEntity(intervention);
         return Ok(resource);
     }
+
+    [HttpGet("plantations/{plantationId:int}/interventions")]
+    [SwaggerOperation(
+        Summary = "List interventions by plantation",
+        Description = "Returns interventions executed within any sector of the given plantation. Supports optional date-range filter.",
+        OperationId = "ListPlantationInterventions")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Interventions found", typeof(IEnumerable<AgronomicInterventionResource>))]
+    public async Task<IActionResult> ListInterventionsByPlantation(
+        int plantationId,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
+    {
+        var query = new GetAgronomicInterventionsByPlantationQuery(plantationId, from, to);
+        var interventions = await queryService.Handle(query);
+        var resources = interventions.Select(AgronomicInterventionResourceFromEntityAssembler.ToResourceFromEntity);
+        return Ok(resources);
+    }
+
+    [HttpGet("recommendations/{recommendationId:int}/interventions")]
+    [SwaggerOperation(
+        Summary = "List interventions by recommendation",
+        Description = "Returns interventions whose OriginRecommendationId matches the given recommendation.",
+        OperationId = "ListRecommendationInterventions")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Interventions found", typeof(IEnumerable<AgronomicInterventionResource>))]
+    public async Task<IActionResult> ListInterventionsByRecommendation(int recommendationId)
+    {
+        var query = new GetAgronomicInterventionsByRecommendationIdQuery(recommendationId);
+        var interventions = await queryService.Handle(query);
+        var resources = interventions.Select(AgronomicInterventionResourceFromEntityAssembler.ToResourceFromEntity);
+        return Ok(resources);
+    }
 }

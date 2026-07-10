@@ -18,4 +18,15 @@ public class AgronomicInterventionQueryService(
     {
         return await interventionRepository.FindBySectorIdAsync(query.SectorId);
     }
+
+    public async Task<IEnumerable<AgronomicIntervention>> Handle(GetAgronomicInterventionsByPlantationQuery query)
+    {
+        return await interventionRepository.FindByPlantationIdAsync(
+            query.PlantationId, query.StartDate, query.EndDate);
+    }
+
+    public async Task<IEnumerable<AgronomicIntervention>> Handle(GetAgronomicInterventionsByRecommendationIdQuery query)
+    {
+        return await interventionRepository.FindByRecommendationIdAsync(query.RecommendationId);
+    }
 }

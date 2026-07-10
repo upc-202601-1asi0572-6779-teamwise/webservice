@@ -63,4 +63,22 @@ public class CropMonitoringFacade(
         Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorPlantationIdAsync({sectorId}) → {plantationId}");
         return plantationId;
     }
+
+    public async Task<int?> GetPalmGrowerIdByIotDeviceMacAsync(string iotDeviceMacAddress)
+    {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetPalmGrowerIdByIotDeviceMacAsync({iotDeviceMacAddress})");
+        var sector = await sectorRepository.FindByIotDeviceMacAddressAsync(iotDeviceMacAddress);
+        if (sector is null)
+        {
+            Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetPalmGrowerIdByIotDeviceMacAsync({iotDeviceMacAddress}) → null (sector not found)");
+            return null;
+        }
+
+        var plantation = await plantationQueryService.Handle(
+            new GetPlantationByIdQuery(sector.PlantationId)
+        );
+        var palmGrowerId = plantation?.PalmGrowerId;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetPalmGrowerIdByIotDeviceMacAsync({iotDeviceMacAddress}) → {palmGrowerId}");
+        return palmGrowerId;
+    }
 }

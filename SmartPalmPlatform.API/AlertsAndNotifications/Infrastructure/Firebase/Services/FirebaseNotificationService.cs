@@ -29,11 +29,21 @@ public class FirebaseNotificationService : IFirebaseNotificationService
 
     private string GetFirebaseCredentialsJson()
     {
-        var read = File.ReadAllText("firebase-credentials.json");
-        if (!string.IsNullOrEmpty(read))
+        const string credentialsFilePath = "firebase-credentials.json";
+        if (File.Exists(credentialsFilePath))
         {
-            Console.WriteLine("[Firebase] FIREBASE_CREDENTIALS_JSON loaded from file.");
-            return read;
+            var read = File.ReadAllText(credentialsFilePath);
+            if (!string.IsNullOrEmpty(read))
+            {
+                Console.WriteLine("[Firebase] FIREBASE_CREDENTIALS_JSON loaded from file.");
+                return read;
+            }
+        }
+        else
+        {
+            Console.WriteLine(
+                "[Firebase] firebase-credentials.json not found in working directory, skipping file load."
+            );
         }
 
         var json = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS_JSON");

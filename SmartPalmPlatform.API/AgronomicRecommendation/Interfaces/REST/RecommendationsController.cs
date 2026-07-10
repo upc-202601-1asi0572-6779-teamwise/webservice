@@ -32,10 +32,17 @@ public class RecommendationsController(
         [FromQuery] string? status,
         [FromQuery] int? agronomistId)
     {
-        var query = GetSectorRecommendationsFromResourceAssembler.ToQueryFromResource(sectorId, status, agronomistId);
-        var recommendations = await recommendationQueryService.Handle(query);
-        var resources = recommendations.Select(RecommendationResourceFromEntityAssembler.ToResourceFromEntity);
-        return Ok(resources);
+        try
+        {
+            var query = GetSectorRecommendationsFromResourceAssembler.ToQueryFromResource(sectorId, status, agronomistId);
+            var recommendations = await recommendationQueryService.Handle(query);
+            var resources = recommendations.Select(RecommendationResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("sectors/{sectorId:int}/recommendations")]
@@ -72,10 +79,17 @@ public class RecommendationsController(
         [FromQuery] string? status,
         [FromQuery] int? agronomistId)
     {
-        var query = GetSectorRecommendationsFromResourceAssembler.ToGeneralQueryFromResource(status, agronomistId);
-        var recommendations = await recommendationQueryService.Handle(query);
-        var resources = recommendations.Select(RecommendationResourceFromEntityAssembler.ToResourceFromEntity);
-        return Ok(resources);
+        try
+        {
+            var query = GetSectorRecommendationsFromResourceAssembler.ToGeneralQueryFromResource(status, agronomistId);
+            var recommendations = await recommendationQueryService.Handle(query);
+            var resources = recommendations.Select(RecommendationResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("recommendations/general")]

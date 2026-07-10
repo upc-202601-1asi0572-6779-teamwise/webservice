@@ -1,0 +1,3 @@
+namespace SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Queries;
+
+public record GetAgronomicInterventionsByRecommendationIdQuery(int RecommendationId);

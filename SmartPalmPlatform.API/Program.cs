@@ -84,11 +84,8 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 Console.WriteLine("[INFO] [Startup] WebApplication builder created.");
 
-// Detect production environment (Render sets PORT and RENDER env vars)
-var isProduction =
-    builder.Environment.IsProduction()
-    || Environment.GetEnvironmentVariable("RENDER") != null
-    || Environment.GetEnvironmentVariable("PORT") != null;
+// Detect production environment
+var isProduction = builder.Environment.IsProduction();
 
 if (isProduction)
 {
@@ -110,13 +107,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     {
         var connectionString =
             builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new Exception("DefaultConnection not found in appsettings.json");
+            ?? throw new Exception("DefaultConnection not found in appsettings.Development.json");
         options
-            .UseMySQL(connectionString)
+            .UseNpgsql(connectionString)
             .LogTo(Console.WriteLine, LogLevel.Information)
             .EnableSensitiveDataLogging()
             .EnableDetailedErrors();
-        Console.WriteLine("[INFO] [Startup] Using MySQL (development)");
+        Console.WriteLine("[INFO] [Startup] Using PostgreSQL (development)");
     }
     else
     {
@@ -313,7 +310,7 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        Console.WriteLine("[INFO] [Database] Ensuring MySQL schema is created...");
+        Console.WriteLine("[INFO] [Database] Ensuring PostgreSQL schema is created...");
         context.Database.EnsureCreated();
         Console.WriteLine("[INFO] [Database] Schema ready.");
 

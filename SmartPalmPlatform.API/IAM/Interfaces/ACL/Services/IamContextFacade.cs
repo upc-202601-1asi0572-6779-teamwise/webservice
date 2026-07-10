@@ -62,6 +62,14 @@ public class IamContextFacade(
     public async Task<bool> HasActiveSubscriptionAsync(int userId)
     {
         Console.WriteLine($"[INFO] [IAM] [IamContextFacade] HasActiveSubscriptionAsync({userId})");
+
+        var userQuery = await userQueryService.Handle(new GetUserByIdQuery(userId));
+        if (userQuery is not null && userQuery.Role == UserRole.Administrator)
+        {
+            Console.WriteLine($"[INFO] [IAM] [IamContextFacade] HasActiveSubscriptionAsync({userId}) → true (Administrator exempt)");
+            return true;
+        }
+
         var query = new GetSubscriptionByUserIdQuery(userId);
         var subscription = await subscriptionQueryService.Handle(query);
         var active = subscription is not null
