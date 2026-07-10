@@ -19,12 +19,14 @@ public class SensorReadingCommandService(
 {
     public async Task Handle(ReadDeviceSensorsDataCommand command)
     {
-        var threesholds = await agronomicThresholdRepository.FindByEdgeDeviceMacAddress(
+        var allThresholds = await agronomicThresholdRepository.FindByEdgeDeviceMacAddress(
             command.EdgeDeviceMacAddress
         );
         var readings = command.Readings;
 
-        var thresholds = threesholds.ToDictionary(t => t.Type, t => t);
+        var thresholdsByDevice = allThresholds
+            .GroupBy(t => t.IotDeviceMacAddress)
+            .ToDictionary(g => g.Key, g => g.ToDictionary(t => t.Type, t => t));
 
         foreach (var r in readings)
         {
@@ -37,7 +39,8 @@ public class SensorReadingCommandService(
             );
             await sensorReadingRepository.AddAsync(reading);
 
-            if (!thresholds.TryGetValue(reading.Type, out var threshold))
+            if (!thresholdsByDevice.TryGetValue(reading.IotDeviceMacAddress, out var deviceThresholds)
+                || !deviceThresholds.TryGetValue(reading.Type, out var threshold))
                 continue;
 
             if (
