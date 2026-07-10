@@ -12,7 +12,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace SmartPalmPlatform.API.AlertsAndNotifications.Interfaces.REST;
 
-[Authorize(Roles = "Administrator,PalmGrower")]
+[Authorize(Roles = "Administrator,PalmGrower,Agronomist")]
 [RequireActiveSubscription]
 [ApiController]
 [Route("api/v1/alerts")]
