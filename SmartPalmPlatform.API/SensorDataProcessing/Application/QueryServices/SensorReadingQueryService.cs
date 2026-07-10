@@ -1,3 +1,4 @@
+using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Model.Aggregates;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Queries;
 using SmartPalmPlatform.API.SensorDataProcessing.Domain.Repositories;
@@ -7,7 +8,8 @@ namespace SmartPalmPlatform.API.SensorDataProcessing.Application.QueryServices;
 
 public class SensorReadingQueryService(
     ISensorReadingRepository sensorReadingRepository,
-    IAgronomicThresholdRepository agronomicThresholdRepository
+    IAgronomicThresholdRepository agronomicThresholdRepository,
+    ICropMonitoringFacade cropMonitoringFacade
 ) : ISensorReadingQueryService
 {
     public async Task<List<SensorReading>> Handle(SensorReadingQuery query)
@@ -38,6 +40,21 @@ public class SensorReadingQueryService(
             query.To,
             query.Page,
             query.Size
+        );
+    }
+
+    public async Task<List<SensorReading>> Handle(SectorSensorDataQuery query)
+    {
+        var deviceMac = await cropMonitoringFacade.GetSectorIotDeviceMacAsync(query.SectorId);
+        if (deviceMac is null)
+            throw new KeyNotFoundException(
+                $"Sector '{query.SectorId}' not found or has no IoT device assigned."
+            );
+
+        return await sensorReadingRepository.FindByIotDeviceMacAddressAndTimeRange(
+            deviceMac,
+            query.From,
+            query.To
         );
     }
 }

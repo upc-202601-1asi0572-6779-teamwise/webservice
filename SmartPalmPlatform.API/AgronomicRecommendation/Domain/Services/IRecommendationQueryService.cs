@@ -5,8 +5,9 @@ namespace SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 
 public interface IRecommendationQueryService
 {
-    Task<IEnumerable<Recommendation>> Handle(GetPlantationRecommendationsQuery query);
-
+    Task<IEnumerable<Recommendation>> Handle(GetSectorRecommendationsQuery query);
+    Task<IEnumerable<Recommendation>> Handle(GetGeneralRecommendationsQuery query);
+    Task<IEnumerable<Recommendation>> Handle(GetRecommendationsByReportIdQuery query);
     Task<Recommendation?> Handle(GetRecommendationByIdQuery query);
 }
 

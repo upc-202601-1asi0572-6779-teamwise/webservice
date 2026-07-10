@@ -19,8 +19,7 @@ public class AgronomicThresholdController(
     IAgronomicThresholdQueryService agronomicThresholdQueryService
 ) : ControllerBase
 {
-    [AllowAnonymous]
-    [HttpGet("{device-mac}/thresholds")]
+    [HttpGet("{deviceMac}/thresholds")]
     [SwaggerOperation(
         Summary = "Get the agronomic thresholds of an IoT device",
         Description = "Returns the agronomic thresholds configured for every sensor type of the given IoT device.",
@@ -28,7 +27,7 @@ public class AgronomicThresholdController(
     [SwaggerResponse(StatusCodes.Status200OK, "The thresholds were found", typeof(IEnumerable<AgronomicThresholdViewResource>))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "The IoT device was not found")]
     public async Task<IActionResult> GetThreshold(
-        [FromRoute(Name = "device-mac")] string deviceMac
+        string deviceMac
     )
     {
         Console.WriteLine($"[INFO] [BC] [AgronomicThreshold] GetThreshold called for deviceMac: {deviceMac}");
@@ -62,7 +61,7 @@ public class AgronomicThresholdController(
         }
     }
 
-    [HttpPatch("{device-mac}/thresholds")]
+    [HttpPatch("{deviceMac}/thresholds")]
     [SwaggerOperation(
         Summary = "Update an agronomic threshold of an IoT device",
         Description = "Partially updates the min, max and/or description of the threshold for the given sensor type. Creates the threshold if it does not exist yet.",
@@ -71,7 +70,7 @@ public class AgronomicThresholdController(
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid payload")]
     [SwaggerResponse(StatusCodes.Status404NotFound, "The IoT device was not found")]
     public async Task<IActionResult> UpdateThreshold(
-        [FromRoute(Name = "device-mac")] string deviceMac,
+        string deviceMac,
         [FromBody] UpdateAgronomicThresholdResource resource
     )
     {

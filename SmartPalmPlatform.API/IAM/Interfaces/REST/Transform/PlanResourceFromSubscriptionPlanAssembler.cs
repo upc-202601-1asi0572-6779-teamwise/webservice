@@ -10,11 +10,11 @@ public static class PlanResourceFromSubscriptionPlanAssembler
         return new PlanResource(
             plan.Type.ToString(),
             plan.Name,
-            plan.Description,
             plan.Price,
             plan.Cycle.ToString(),
             plan.MaxHectares,
-            plan.MaxSensors
+            plan.MaxSensors,
+            plan.MaxPlantationHistory
         );
     }
 }

@@ -42,7 +42,6 @@ public class RequestAuthorizationMiddleware(RequestDelegate next)
         {
             var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
 
-            // log al headers
             foreach (var header in context.Request.Headers)
             {
                 Console.WriteLine($"[Middleware] Header: {header.Key}: {header.Value}");
@@ -57,7 +56,6 @@ public class RequestAuthorizationMiddleware(RequestDelegate next)
             var token = authHeader.Substring("Bearer ".Length).Trim();
             Console.WriteLine($"[Middleware] Token found: {token.Substring(0, Math.Min(20, token.Length))}...");
 
-
             var userId = await tokenService.ValidateToken(token);
             if (userId == null)
             {
@@ -67,7 +65,6 @@ public class RequestAuthorizationMiddleware(RequestDelegate next)
             }
 
             Console.WriteLine($"[Middleware] Token valid for userId: {userId}");
-
 
             var getUserByIdQuery = new GetUserByIdQuery(userId.Value);
             var user = await userQueryService.Handle(getUserByIdQuery);
@@ -85,7 +82,6 @@ public class RequestAuthorizationMiddleware(RequestDelegate next)
         catch (Exception ex)
         {
             Console.WriteLine($"[Middleware] Error in authorization: {ex.Message}");
-
         }
 
         Console.WriteLine("[Middleware] Continuing to next middleware...");

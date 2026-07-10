@@ -6,7 +6,8 @@ namespace SmartPalmPlatform.API.AlertsAndNotifications.Domain.Repositories;
 public interface IAlertRepository
 {
     Task AddAsync(Alert alert);
-    Task<Alert?> FindByGuidAsync(Guid alertId);
+    Task<Alert?> FindByIdAsync(int alertId);
+    Task<IEnumerable<Alert>> FindAllAsync();
     Task<IEnumerable<Alert>> FindByUserIdAsync(int userId);
     Task<IEnumerable<Alert>> FindBySensorTypeAsync(SensorType sensorType);
 }

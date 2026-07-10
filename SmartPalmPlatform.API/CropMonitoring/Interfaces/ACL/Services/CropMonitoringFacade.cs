@@ -45,4 +45,22 @@ public class CropMonitoringFacade(
         Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] PlantationHasActiveSectorsAsync({plantationId}) → {hasActive} (total sectors: {sectors.Count()})");
         return hasActive;
     }
+
+    public async Task<string?> GetSectorIotDeviceMacAsync(int sectorId)
+    {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorIotDeviceMacAsync({sectorId})");
+        var sector = await sectorRepository.FindByIdAsync(sectorId);
+        var mac = sector?.IotDeviceMacAddress;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorIotDeviceMacAsync({sectorId}) → {mac}");
+        return mac;
+    }
+
+    public async Task<int?> GetSectorPlantationIdAsync(int sectorId)
+    {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorPlantationIdAsync({sectorId})");
+        var sector = await sectorRepository.FindByIdAsync(sectorId);
+        var plantationId = sector?.PlantationId;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorPlantationIdAsync({sectorId}) → {plantationId}");
+        return plantationId;
+    }
 }

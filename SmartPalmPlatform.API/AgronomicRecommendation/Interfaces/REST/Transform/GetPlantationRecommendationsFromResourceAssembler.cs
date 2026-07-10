@@ -3,16 +3,27 @@ using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Transform;
 
-public static class GetPlantationRecommendationsFromResourceAssembler
+public static class GetSectorRecommendationsFromResourceAssembler
 {
-    public static GetPlantationRecommendationsQuery ToQueryFromResource(
-        int plantationId,
+    public static GetSectorRecommendationsQuery ToQueryFromResource(
+        int sectorId,
         string? status,
         int? agronomistId = null
     )
     {
-        return new GetPlantationRecommendationsQuery(
-            plantationId,
+        return new GetSectorRecommendationsQuery(
+            sectorId,
+            status is null ? null : StatusFromString(status),
+            agronomistId
+        );
+    }
+
+    public static GetGeneralRecommendationsQuery ToGeneralQueryFromResource(
+        string? status,
+        int? agronomistId = null
+    )
+    {
+        return new GetGeneralRecommendationsQuery(
             status is null ? null : StatusFromString(status),
             agronomistId
         );

@@ -8,7 +8,7 @@ public static class CreateSubscriptionCommandFromResourceAssembler
 {
     public static CreateSubscriptionCommand ToCommandFromResource(int userId, CreateSubscriptionResource resource)
     {
-        var planType = Enum.Parse<PlanType>(resource.planType, ignoreCase: true);
+        var planType = Enum.Parse<PlanType>(resource.PlanType, ignoreCase: true);
         return new CreateSubscriptionCommand(userId, planType);
     }
 }

@@ -41,34 +41,4 @@ public class AuthenticationController(IUserCommandService userCommandService) : 
             return Unauthorized(new { message = e.Message });
         }
     }
-
-    [HttpPost("sign-up")]
-    [AllowAnonymous]
-    [SwaggerOperation(
-        Summary = "Sign up",
-        Description = "Sign up a new user",
-        OperationId = "SignUp")]
-    [SwaggerResponse(StatusCodes.Status200OK, "The user was created successfully")]
-    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid registration data")]
-    public async Task<IActionResult> SignUp([FromBody] SignUpResource signUpResource)
-    {
-        Console.WriteLine($"[INFO] [IAM] [AuthenticationController] SignUp attempt for username '{signUpResource.username}'");
-        try
-        {
-            var signUpCommand = SignUpCommandFromResourceAssembler.ToCommandFromResource(signUpResource);
-            await userCommandService.Handle(signUpCommand);
-            Console.WriteLine($"[INFO] [IAM] [AuthenticationController] SignUp successful for user '{signUpResource.username}'");
-            return Ok(new { message = "User created successfully" });
-        }
-        catch (Exception e) when (e is ArgumentException)
-        {
-            Console.WriteLine($"[WARN] [IAM] [AuthenticationController] SignUp validation failed for '{signUpResource.username}': {e.Message}");
-            return BadRequest(new { message = e.Message });
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"[ERROR] [IAM] [AuthenticationController] SignUp error for '{signUpResource.username}': {e.Message}");
-            return BadRequest(new { message = e.Message });
-        }
-    }
 }

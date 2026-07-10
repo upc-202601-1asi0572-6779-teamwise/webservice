@@ -33,8 +33,6 @@ public static class ModelBuilderExtensions
         builder.Entity<Subscription>().Property(s => s.PlanType).IsRequired().HasConversion<string>().HasMaxLength(20);
         builder.Entity<Subscription>().Property(s => s.PlanName).IsRequired().HasMaxLength(100);
         builder.Entity<Subscription>().Property(s => s.Price).IsRequired().HasColumnType("decimal(18,2)");
-        builder.Entity<Subscription>().Property(s => s.MaxHectares).IsRequired(false);
-        builder.Entity<Subscription>().Property(s => s.MaxSensors).IsRequired(false);
         builder.Entity<Subscription>().Property(s => s.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
         builder.Entity<Subscription>().Property(s => s.StartDate).IsRequired();
         builder.Entity<Subscription>().Property(s => s.EndDate).IsRequired();

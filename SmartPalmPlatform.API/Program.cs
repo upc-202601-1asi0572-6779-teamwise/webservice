@@ -1,5 +1,8 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
@@ -21,7 +24,9 @@ using SmartPalmPlatform.API.CropMonitoring.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.EventHandlers;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.CropMonitoring.Application;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Repositories;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Services;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.DomainServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.QueryServices;
@@ -130,8 +135,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 Console.WriteLine("[INFO] [Startup] Registering dependency injection services...");
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // IAM Bounded Context
@@ -139,9 +142,38 @@ builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("Toke
 var tokenSecret = builder.Configuration["TokenSettings:Secret"];
 if (string.IsNullOrEmpty(tokenSecret))
 {
-    Console.WriteLine("[FATAL] [Startup] TokenSettings:Secret is not configured. Set the 'TokenSettings__Secret' environment variable or add it to appsettings.json.");
-    throw new InvalidOperationException("TokenSettings:Secret is not configured. Set the 'TokenSettings__Secret' environment variable or add it to appsettings.json.");
+    Console.WriteLine("[FATAL] [Startup] TokenSettings:Secret is not configured.");
+    throw new InvalidOperationException("TokenSettings:Secret is not configured.");
 }
+
+// JWT Bearer Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenSecret)),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userId = int.Parse(context.Principal!.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userQueryService = context.HttpContext.RequestServices.GetRequiredService<IUserQueryService>();
+            var user = await userQueryService.Handle(new SmartPalmPlatform.API.IAM.Domain.Model.Queries.GetUserByIdQuery(userId));
+            if (user != null)
+                context.HttpContext.Items["User"] = user;
+        }
+    };
+});
+builder.Services.AddAuthorization();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
@@ -149,6 +181,7 @@ builder.Services.AddScoped<IHashingService, HashingService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IUserDomainService, UserDomainService>();
 builder.Services.AddScoped<ISubscriptionCommandService, SubscriptionCommandService>();
 builder.Services.AddScoped<IPaymentCommandService, PaymentCommandService>();
 builder.Services.AddScoped<ISubscriptionQueryService, SubscriptionQueryService>();
@@ -170,6 +203,9 @@ builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>(
 builder.Services.AddScoped<IRecommendationCommandService, RecommendationCommandService>();
 builder.Services.AddScoped<IRecommendationQueryService, RecommendationQueryService>();
 builder.Services.AddScoped<IRecommendationFacade, RecommendationFacade>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IReportCommandService, ReportCommandService>();
+builder.Services.AddScoped<IReportQueryService, ReportQueryService>();
 
 // Field Technical Management Bounded Context Injection Configuration
 builder.Services.AddScoped<IAgronomicInterventionRepository, JpaAgronomicInterventionRepository>();
@@ -190,7 +226,9 @@ builder.Services.AddScoped<IAgronomicThresholdRepository, AgronomicThresholdRepo
 builder.Services.AddScoped<ISensorReadingCommandService, SensorReadingCommandService>();
 builder.Services.AddScoped<ISensorReadingQueryService, SensorReadingQueryService>();
 builder.Services.AddScoped<IAgronomicThresholdQueryService, AgronomicThresholdQueryService>();
+builder.Services.AddScoped<ISectorHealthQueryService, SectorHealthQueryService>();
 builder.Services.AddScoped<IThresholdEvaluationService, ThresholdEvaluationService>();
+builder.Services.AddScoped<ISensorTypeDomainService, SensorTypeDomainService>();
 
 // Alerts & Notifications Bounded Context
 builder.Services.AddScoped<IAlertRepository, AlertRepository>();
@@ -205,9 +243,12 @@ builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationSer
 // Crop Monitoring Bounded Context
 builder.Services.AddScoped<IPlantationRepository, PlantationRepository>();
 builder.Services.AddScoped<ISectorRepository, SectorRepository>();
+builder.Services.AddScoped<IAgronomistPlantationAffiliationRepository, AgronomistPlantationAffiliationRepository>();
 builder.Services.AddScoped<IPlantationCommandService, PlantationCommandService>();
 builder.Services.AddScoped<IPlantationQueryService, PlantationQueryService>();
 builder.Services.AddScoped<IInstallationPlanService, InstallationPlanService>();
+builder.Services.AddScoped<IAgronomistPlantationAffiliationCommandService, AgronomistPlantationAffiliationCommandService>();
+builder.Services.AddScoped<IAgronomistPlantationAffiliationQueryService, AgronomistPlantationAffiliationQueryService>();
 builder.Services.AddScoped<ICropMonitoringFacade, CropMonitoringFacade>();
 
 Console.WriteLine("[INFO] [Startup] DI registrations complete. Registering event handlers...");
@@ -339,6 +380,7 @@ if (!isProduction)
 }
 
 // Request authorization middleware must come before UseAuthorization()
+app.UseAuthentication();
 app.UseRequestAuthorization();
 Console.WriteLine("[INFO] [Startup] Request authorization middleware registered.");
 

@@ -51,7 +51,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpGet("{gateway-mac}/devices")]
+        [HttpGet("{gatewayMac}/devices")]
         [SwaggerOperation(
             Summary = "Get the IoT devices of an edge gateway",
             Description = "Returns the IoT devices currently registered under the given edge gateway.",
@@ -59,7 +59,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         [SwaggerResponse(StatusCodes.Status200OK, "The devices were found", typeof(GatewayDevicesResource))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
         public async Task<IActionResult> GetDevices(
-            [FromRoute(Name = "gateway-mac")] string gatewayMac
+            string gatewayMac
         )
         {
             Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetDevices called for gatewayMac: {gatewayMac}");
@@ -94,7 +94,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         }
 
         [AllowAnonymous]
-        [HttpPost("{gateway-mac}/synchronizations")]
+        [HttpPost("{gatewayMac}/synchronizations")]
         [SwaggerOperation(
             Summary = "Synchronize an edge gateway",
             Description = "Marks the edge gateway as reconnected and submits a batch of sensor readings buffered while it was offline.",
@@ -103,7 +103,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid payload")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
         public async Task<IActionResult> SynchronizeEdge(
-            [FromRoute(Name = "gateway-mac")] string gatewayMac,
+            string gatewayMac,
             [FromBody] EdgeSynchronizationResource resource
         )
         {
@@ -140,7 +140,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         }
 
         [AllowAnonymous]
-        [HttpGet("{gateway-mac}/connectivity")]
+        [HttpGet("{gatewayMac}/connectivity")]
         [SwaggerOperation(
             Summary = "Get the connectivity status of an edge gateway",
             Description = "Returns whether the given edge gateway is currently considered connected.",
@@ -148,7 +148,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         [SwaggerResponse(StatusCodes.Status200OK, "The connectivity status was found", typeof(ConnectivityStatusResource))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
         public async Task<IActionResult> GetConnectivityStatus(
-            [FromRoute(Name = "gateway-mac")] string gatewayMac
+            string gatewayMac
         )
         {
             Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetConnectivityStatus called for gatewayMac: {gatewayMac}");
@@ -183,15 +183,15 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpGet("{gateway-mac}/registry")]
+        [HttpGet("{gatewayMac}/registry")]
         [SwaggerOperation(
             Summary = "Get the device registry of an edge gateway",
-            Description = "Legacy view of the IoT devices registered under an edge gateway. Superseded by GET /{gateway-mac}/devices, kept for backward compatibility.",
+            Description = "Legacy view of the IoT devices registered under an edge gateway. Superseded by GET /{gatewayMac}/devices, kept for backward compatibility.",
             OperationId = "GetDeviceRegistry")]
         [SwaggerResponse(StatusCodes.Status200OK, "The registry was found", typeof(EdgeRegistryResource))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
         public async Task<IActionResult> GetDeviceRegistry(
-            [FromRoute(Name = "gateway-mac")] string gatewayMac
+            string gatewayMac
         )
         {
             Console.WriteLine($"[INFO] [BC] [DeviceStatus] GetDeviceRegistry called for gatewayMac: {gatewayMac}");
