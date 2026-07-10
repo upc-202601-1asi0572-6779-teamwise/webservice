@@ -1,6 +1,8 @@
 using MediatR;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Commands;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Events;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Enums;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
 using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL;
@@ -20,26 +22,37 @@ public class RecommendationCommandService(
 {
     public async Task<Recommendation> Handle(CreateRecommendationCommand command)
     {
-        if (!await cropMonitoringFacade.PlantationExistsAsync(command.PlantationId))
-            throw new ArgumentException($"Plantation with id {command.PlantationId} does not exist.");
-
         if (!await iamContextFacade.UserExistsByIdAsync(command.AgronomistId))
             throw new ArgumentException($"Agronomist with id {command.AgronomistId} does not exist.");
 
         if (!await iamContextFacade.HasActiveSubscriptionAsync(command.AgronomistId))
             throw new InvalidOperationException("User does not have an active subscription.");
 
-        if (!await cropMonitoringFacade.PlantationHasActiveSectorsAsync(command.PlantationId))
-            throw new ArgumentException("Plantation has no active sectors.");
+        if (command.Type == RecommendationType.SectorSpecific)
+        {
+            if (command.SectorId is null)
+                throw new ArgumentException("SectorId is required for sector-specific recommendations.");
+
+            if (!await cropMonitoringFacade.SectorExistsAsync(command.SectorId.Value))
+                throw new ArgumentException($"Sector with id {command.SectorId} does not exist.");
+        }
 
         var recommendation = new Recommendation(
-            command.PlantationId,
+            command.SectorId,
             command.AgronomistId,
-            command.Content
+            command.Content,
+            command.Type,
+            command.ReportId
         );
 
         await recommendationRepository.AddAsync(recommendation);
         await unitOfWork.CompleteAsync();
+
+        if (command.Type == RecommendationType.SectorSpecific && command.SectorId.HasValue)
+        {
+            await mediator.Publish(new SectorSpecificRecommendationCreatedEvent(
+                recommendation.Id, command.AgronomistId, command.SectorId.Value));
+        }
 
         return recommendation;
     }
@@ -50,9 +63,6 @@ public class RecommendationCommandService(
 
         if (recommendation is null)
             throw new KeyNotFoundException("Recommendation not found.");
-
-        if (!await cropMonitoringFacade.PlantationExistsAsync(recommendation.PlantationId))
-            throw new ArgumentException($"Plantation with id {recommendation.PlantationId} does not exist.");
 
         if (!await iamContextFacade.UserExistsByIdAsync(recommendation.AgronomistId))
             throw new ArgumentException($"Agronomist with id {recommendation.AgronomistId} does not exist.");
@@ -75,9 +85,6 @@ public class RecommendationCommandService(
         if (recommendation is null)
             throw new KeyNotFoundException("Recommendation not found.");
 
-        if (!await cropMonitoringFacade.PlantationExistsAsync(recommendation.PlantationId))
-            throw new ArgumentException($"Plantation with id {recommendation.PlantationId} does not exist.");
-
         if (!await iamContextFacade.UserExistsByIdAsync(recommendation.AgronomistId))
             throw new ArgumentException($"Agronomist with id {recommendation.AgronomistId} does not exist.");
 
@@ -98,9 +105,6 @@ public class RecommendationCommandService(
 
         if (recommendation is null)
             throw new KeyNotFoundException("Recommendation not found.");
-
-        if (!await cropMonitoringFacade.PlantationExistsAsync(recommendation.PlantationId))
-            throw new ArgumentException($"Plantation with id {recommendation.PlantationId} does not exist.");
 
         if (!await iamContextFacade.UserExistsByIdAsync(recommendation.AgronomistId))
             throw new ArgumentException($"Agronomist with id {recommendation.AgronomistId} does not exist.");

@@ -1,7 +1,7 @@
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Enums;
 
-public enum RecommendationType
+public enum ReportStatus
 {
-    SectorSpecific = 0,
-    General = 1,
+    Draft = 0,
+    Published = 1,
 }

@@ -9,28 +9,41 @@ namespace SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryService
 public class RecommendationQueryService(IRecommendationRepository recommendationRepository)
     : IRecommendationQueryService
 {
-    public async Task<IEnumerable<Recommendation>> Handle(GetPlantationRecommendationsQuery query)
+    public async Task<IEnumerable<Recommendation>> Handle(GetSectorRecommendationsQuery query)
     {
         if (query.Status is null && query.AgronomistId is null)
-            return await recommendationRepository.FindByPlantationIdAsync(query.PlantationId);
+            return await recommendationRepository.FindBySectorIdAsync(query.SectorId);
 
         if (query.Status is not null && query.AgronomistId is not null)
-            return await recommendationRepository.FindByPlantationIdAgronomistIdAndStatusAsync(
-                query.PlantationId,
+            return await recommendationRepository.FindBySectorIdAgronomistIdAndStatusAsync(
+                query.SectorId,
                 query.AgronomistId.Value,
                 query.Status.Value
             );
 
         if (query.AgronomistId is not null)
-            return await recommendationRepository.FindByPlantationIdAndAgronomistIdAsync(
-                query.PlantationId,
+            return await recommendationRepository.FindBySectorIdAndAgronomistIdAsync(
+                query.SectorId,
                 query.AgronomistId.Value
             );
 
-        return await recommendationRepository.FindByPlantationIdAndStatusAsync(
-            query.PlantationId,
+        return await recommendationRepository.FindBySectorIdAndStatusAsync(
+            query.SectorId,
             query.Status!.Value
         );
+    }
+
+    public async Task<IEnumerable<Recommendation>> Handle(GetGeneralRecommendationsQuery query)
+    {
+        if (query.Status is not null)
+            return await recommendationRepository.FindGeneralAndStatusAsync(query.Status.Value);
+
+        return await recommendationRepository.FindGeneralAsync();
+    }
+
+    public async Task<IEnumerable<Recommendation>> Handle(GetRecommendationsByReportIdQuery query)
+    {
+        return await recommendationRepository.FindByReportIdAsync(query.ReportId);
     }
 
     public async Task<Recommendation?> Handle(GetRecommendationByIdQuery query)

@@ -5,48 +5,39 @@ namespace SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Aggregates;
 public class Recommendation
 {
     public int Id { get; private set; }
-
-    public int PlantationId { get; private set; }
-
+    public int? SectorId { get; private set; }
+    public int? ReportId { get; private set; }
     public int AgronomistId { get; private set; }
-
     public string Content { get; private set; }
-
     public RecommendationType Type { get; private set; }
-
     public RecommendationStatus Status { get; private set; }
-
     public DateTime CreatedAt { get; private set; }
-
     public DateTime? ApprovedAt { get; private set; }
-
     public DateTime? PublishedAt { get; private set; }
 
-    public Recommendation(int plantationId, int agronomistId, string content)
+    public Recommendation(int? sectorId, int agronomistId, string content, RecommendationType type = RecommendationType.SectorSpecific, int? reportId = null)
     {
-        if (plantationId <= 0)
-            throw new ArgumentException("PlantationId must be greater than zero.");
-
         if (agronomistId <= 0)
             throw new ArgumentException("AgronomistId must be greater than zero.");
 
         if (string.IsNullOrWhiteSpace(content))
             throw new ArgumentException("Recommendation content cannot be empty.");
 
-        PlantationId = plantationId;
+        SectorId = sectorId;
+        ReportId = reportId;
         AgronomistId = agronomistId;
         Content = content;
-        Type = RecommendationType.Manual;
+        Type = type;
         Status = RecommendationStatus.Pending;
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
     }
 
     public Recommendation()
     {
         Content = string.Empty;
-        Type = RecommendationType.Manual;
+        Type = RecommendationType.SectorSpecific;
         Status = RecommendationStatus.Pending;
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
     }
 
     public void UpdateContent(string newContent)
@@ -66,7 +57,7 @@ public class Recommendation
             throw new InvalidOperationException("Only pending recommendations can be approved.");
 
         Status = RecommendationStatus.Approved;
-        ApprovedAt = DateTime.Now;
+        ApprovedAt = DateTime.UtcNow;
     }
 
     public void Publish()
@@ -75,6 +66,6 @@ public class Recommendation
             throw new InvalidOperationException("Only approved recommendations can be published.");
 
         Status = RecommendationStatus.Published;
-        PublishedAt = DateTime.Now;
+        PublishedAt = DateTime.UtcNow;
     }
 }
