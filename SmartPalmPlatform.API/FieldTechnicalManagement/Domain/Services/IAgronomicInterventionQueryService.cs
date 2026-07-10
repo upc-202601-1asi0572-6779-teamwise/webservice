@@ -7,4 +7,6 @@ public interface IAgronomicInterventionQueryService
 {
     Task<AgronomicIntervention?> Handle(GetAgronomicInterventionByIdQuery query);
     Task<IEnumerable<AgronomicIntervention>> Handle(GetAgronomicInterventionsBySectorIdQuery query);
+    Task<IEnumerable<AgronomicIntervention>> Handle(GetAgronomicInterventionsByPlantationQuery query);
+    Task<IEnumerable<AgronomicIntervention>> Handle(GetAgronomicInterventionsByRecommendationIdQuery query);
 }

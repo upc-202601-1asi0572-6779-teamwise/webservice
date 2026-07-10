@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Model.Entities;
 using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Model.Entities;
 using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
@@ -28,6 +29,26 @@ public class JpaAgronomicInterventionRepository(AppDbContext context)
             query = query.Where(a => a.ExecutionDate <= endDate.Value);
 
         return await query.ToListAsync();
+    }
+
+    public async Task<IEnumerable<AgronomicIntervention>> FindByPlantationIdAsync(
+        int plantationId,
+        DateTime? startDate = null,
+        DateTime? endDate = null
+    )
+    {
+        var query =
+            from i in Context.Set<AgronomicIntervention>()
+            join s in Context.Set<Sector>() on i.SectorId equals s.Id
+            where s.PlantationId == plantationId
+            select i;
+
+        if (startDate.HasValue)
+            query = query.Where(i => i.ExecutionDate >= startDate.Value);
+        if (endDate.HasValue)
+            query = query.Where(i => i.ExecutionDate <= endDate.Value);
+
+        return await query.OrderByDescending(i => i.ExecutionDate).ToListAsync();
     }
 
     public async Task<IEnumerable<AgronomicIntervention>> FindByRecommendationIdAsync(
