@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.AlertsAndNotifications.Domain.Model.Commands;
 
-public record AcknowledgeAlertCommand(Guid AlertId);
+public record AcknowledgeAlertCommand(int AlertId);

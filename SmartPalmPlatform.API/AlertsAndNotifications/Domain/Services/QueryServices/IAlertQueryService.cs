@@ -5,6 +5,7 @@ namespace SmartPalmPlatform.API.AlertsAndNotifications.Domain.Services.QueryServ
 
 public interface IAlertQueryService
 {
+    Task<IEnumerable<Alert>> Handle(GetAllAlertsQuery query);
     Task<IEnumerable<Alert>> Handle(GetAlertsByUserIdQuery query);
     Task<Alert?> Handle(GetAlertByIdQuery query);
 }

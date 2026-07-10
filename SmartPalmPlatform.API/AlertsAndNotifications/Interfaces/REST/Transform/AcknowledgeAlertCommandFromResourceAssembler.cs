@@ -7,6 +7,6 @@ public static class AcknowledgeAlertCommandFromResourceAssembler
 {
     public static AcknowledgeAlertCommand ToCommandFromResource(AcknowledgeAlertResource resource)
     {
-        return new AcknowledgeAlertCommand(Guid.Parse(resource.alertId));
+        return new AcknowledgeAlertCommand(resource.AlertId);
     }
 }

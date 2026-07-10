@@ -5,7 +5,7 @@ namespace SmartPalmPlatform.API.AlertsAndNotifications.Domain.Model.Aggregates;
 
 public class Alert
 {
-    public Guid Id { get; private set; }
+    public int Id { get; private set; }
     public SensorType SensorType { get; private set; }
     public int UserId { get; private set; }
     public string Message { get; private set; }

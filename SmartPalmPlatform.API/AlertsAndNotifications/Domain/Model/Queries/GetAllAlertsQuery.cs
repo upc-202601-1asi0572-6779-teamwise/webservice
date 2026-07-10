@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.AlertsAndNotifications.Domain.Model.Queries;
 
-public record GetAlertByIdQuery(int AlertId);
+public record GetAllAlertsQuery;
