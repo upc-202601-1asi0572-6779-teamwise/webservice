@@ -18,4 +18,9 @@ public class PlantationQueryService(
     {
         return await plantationRepository.FindByPalmGrowerIdAsync(query.UserId);
     }
+
+    public async Task<IEnumerable<Plantation>> Handle(GetAllPlantationsQuery query)
+    {
+        return await plantationRepository.ListAsync();
+    }
 }

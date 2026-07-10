@@ -19,8 +19,9 @@ public class PlantationCommandService(
 {
     public async Task<Plantation> Handle(CreatePlantationCommand command)
     {
-        if (!await iamContextFacade.HasActiveSubscriptionAsync(command.PalmGrowerId))
-            throw new InvalidOperationException("User does not have an active subscription.");
+        if (!await iamContextFacade.UserExistsByIdAsync(command.PalmGrowerId))
+            throw new KeyNotFoundException($"User '{command.PalmGrowerId}' not found.");
+
         var plan = installationPlanService.CalculatePlan(command.Hectares);
 
         var plantation = new Plantation(

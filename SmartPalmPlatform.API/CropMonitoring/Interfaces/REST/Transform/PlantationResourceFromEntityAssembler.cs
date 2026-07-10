@@ -34,7 +34,7 @@ public static class PlantationResourceFromEntityAssembler
             entity.InstallationPlan.Message,
             entity.CreatedAt,
             entity.UpdatedAt,
-            new List<SectorResource>()
+            entity.Sectors.Select(SectorResourceFromEntityAssembler.ToResourceFromEntity).ToList()
         );
     }
 }

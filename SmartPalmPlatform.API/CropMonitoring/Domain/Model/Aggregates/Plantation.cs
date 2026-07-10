@@ -1,3 +1,4 @@
+using SmartPalmPlatform.API.CropMonitoring.Domain.Model.Entities;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Model.Enums;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Model.ValueObjects;
 
@@ -14,6 +15,8 @@ public class Plantation
     public InstallationPlan InstallationPlan { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
+
+    public ICollection<Sector> Sectors { get; } = new List<Sector>();
 
     public Plantation(
         int palmGrowerId,
