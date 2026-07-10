@@ -8,24 +8,30 @@ public interface IRecommendationRepository : IBaseRepository<Recommendation>
 {
     Task<IEnumerable<Recommendation>> FindPendingAsync();
 
-    Task<IEnumerable<Recommendation>> FindByPlantationIdAsync(int plantationId);
+    Task<IEnumerable<Recommendation>> FindBySectorIdAsync(int sectorId);
 
-    Task<IEnumerable<Recommendation>> FindByPlantationIdAndStatusAsync(
-        int plantationId,
+    Task<IEnumerable<Recommendation>> FindBySectorIdAndStatusAsync(
+        int sectorId,
         RecommendationStatus status
     );
 
-    Task<IEnumerable<Recommendation>> FindByPlantationIdAndAgronomistIdAsync(
-        int plantationId,
+    Task<IEnumerable<Recommendation>> FindBySectorIdAndAgronomistIdAsync(
+        int sectorId,
         int agronomistId
     );
 
-    Task<IEnumerable<Recommendation>> FindByPlantationIdAgronomistIdAndStatusAsync(
-        int plantationId,
+    Task<IEnumerable<Recommendation>> FindBySectorIdAgronomistIdAndStatusAsync(
+        int sectorId,
         int agronomistId,
         RecommendationStatus status
     );
 
     Task<IEnumerable<Recommendation>> FindByAgronomistIdAsync(int agronomistId);
+
+    Task<IEnumerable<Recommendation>> FindGeneralAsync();
+
+    Task<IEnumerable<Recommendation>> FindGeneralAndStatusAsync(RecommendationStatus status);
+
+    Task<IEnumerable<Recommendation>> FindByReportIdAsync(int reportId);
 }
 

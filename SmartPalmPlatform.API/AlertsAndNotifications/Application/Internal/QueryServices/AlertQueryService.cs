@@ -7,6 +7,11 @@ namespace SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.Quer
 
 public class AlertQueryService(IAlertRepository alertRepository) : IAlertQueryService
 {
+    public async Task<IEnumerable<Alert>> Handle(GetAllAlertsQuery query)
+    {
+        return await alertRepository.FindAllAsync();
+    }
+
     public async Task<IEnumerable<Alert>> Handle(GetAlertsByUserIdQuery query)
     {
         return await alertRepository.FindByUserIdAsync(query.UserId);
@@ -14,6 +19,6 @@ public class AlertQueryService(IAlertRepository alertRepository) : IAlertQuerySe
 
     public async Task<Alert?> Handle(GetAlertByIdQuery query)
     {
-        return await alertRepository.FindByGuidAsync(query.AlertId);
+        return await alertRepository.FindByIdAsync(query.AlertId);
     }
 }

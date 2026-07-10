@@ -1,12 +1,15 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.CommandServices;
 using SmartPalmPlatform.API.AgronomicRecommendation.Application.QueryServices;
-using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL;
-using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Repositories;
 using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Services;
+using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL;
+using SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.ACL.Services;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.AlertsAndNotifications.Application.Internal.EventHandlers;
@@ -21,13 +24,20 @@ using SmartPalmPlatform.API.CropMonitoring.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.EventHandlers;
 using SmartPalmPlatform.API.CropMonitoring.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.CropMonitoring.Application;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Repositories;
+using SmartPalmPlatform.API.CropMonitoring.Domain.Services;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.CommandServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.DomainServices;
 using SmartPalmPlatform.API.CropMonitoring.Domain.Services.QueryServices;
 using SmartPalmPlatform.API.CropMonitoring.Infrastructure.Persistence.EFC.Repositories;
 using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL;
 using SmartPalmPlatform.API.CropMonitoring.Interfaces.ACL.Services;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.CommandServices;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.QueryServices;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Repositories;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Services;
+using SmartPalmPlatform.API.FieldTechnicalManagement.Infrastructure.Persistance.EFC.Repositories;
 using SmartPalmPlatform.API.IAM.Application.Internal.CommandServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.DomainServices;
 using SmartPalmPlatform.API.IAM.Application.Internal.OutboundServices;
@@ -67,11 +77,6 @@ using SmartPalmPlatform.API.SensorDataProcessing.Infraestructure.Persistance.EFC
 using SmartPalmPlatform.API.Shared.Domain.Repositories;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Configuration;
 using SmartPalmPlatform.API.Shared.Infrastructure.Persistence.EFC.Repositories;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.CommandServices;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Application.Internal.QueryServices;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Repositories;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Domain.Services;
-using SmartPalmPlatform.API.FieldTechnicalManagement.Infrastructure.Persistance.EFC.Repositories;
 
 Console.WriteLine("[INFO] [Startup] SmartPalm Platform API initializing...");
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -79,11 +84,8 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 Console.WriteLine("[INFO] [Startup] WebApplication builder created.");
 
-// Detect production environment (Render sets PORT and RENDER env vars)
-var isProduction =
-    builder.Environment.IsProduction()
-    || Environment.GetEnvironmentVariable("RENDER") != null
-    || Environment.GetEnvironmentVariable("PORT") != null;
+// Detect production environment
+var isProduction = builder.Environment.IsProduction();
 
 if (isProduction)
 {
@@ -105,13 +107,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     {
         var connectionString =
             builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new Exception("DefaultConnection not found in appsettings.json");
+            ?? throw new Exception("DefaultConnection not found in appsettings.Development.json");
         options
-            .UseMySQL(connectionString)
+            .UseNpgsql(connectionString)
             .LogTo(Console.WriteLine, LogLevel.Information)
             .EnableSensitiveDataLogging()
             .EnableDetailedErrors();
-        Console.WriteLine("[INFO] [Startup] Using MySQL (development)");
+        Console.WriteLine("[INFO] [Startup] Using PostgreSQL (development)");
     }
     else
     {
@@ -130,12 +132,45 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 Console.WriteLine("[INFO] [Startup] Registering dependency injection services...");
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // IAM Bounded Context
 builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+var tokenSecret = builder.Configuration["TokenSettings:Secret"];
+if (string.IsNullOrEmpty(tokenSecret))
+{
+    Console.WriteLine("[FATAL] [Startup] TokenSettings:Secret is not configured.");
+    throw new InvalidOperationException("TokenSettings:Secret is not configured.");
+}
+
+// JWT Bearer Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenSecret)),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userId = int.Parse(context.Principal!.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userQueryService = context.HttpContext.RequestServices.GetRequiredService<IUserQueryService>();
+            var user = await userQueryService.Handle(new SmartPalmPlatform.API.IAM.Domain.Model.Queries.GetUserByIdQuery(userId));
+            if (user != null)
+                context.HttpContext.Items["User"] = user;
+        }
+    };
+});
+builder.Services.AddAuthorization();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
@@ -143,6 +178,7 @@ builder.Services.AddScoped<IHashingService, HashingService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IUserDomainService, UserDomainService>();
 builder.Services.AddScoped<ISubscriptionCommandService, SubscriptionCommandService>();
 builder.Services.AddScoped<IPaymentCommandService, PaymentCommandService>();
 builder.Services.AddScoped<ISubscriptionQueryService, SubscriptionQueryService>();
@@ -164,10 +200,16 @@ builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>(
 builder.Services.AddScoped<IRecommendationCommandService, RecommendationCommandService>();
 builder.Services.AddScoped<IRecommendationQueryService, RecommendationQueryService>();
 builder.Services.AddScoped<IRecommendationFacade, RecommendationFacade>();
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IReportCommandService, ReportCommandService>();
+builder.Services.AddScoped<IReportQueryService, ReportQueryService>();
 
 // Field Technical Management Bounded Context Injection Configuration
 builder.Services.AddScoped<IAgronomicInterventionRepository, JpaAgronomicInterventionRepository>();
-builder.Services.AddScoped<IAgronomicInterventionCommandService, AgronomicInterventionCommandService>();
+builder.Services.AddScoped<
+    IAgronomicInterventionCommandService,
+    AgronomicInterventionCommandService
+>();
 builder.Services.AddScoped<IAgronomicInterventionQueryService, AgronomicInterventionQueryService>();
 
 builder.Services.AddScoped<IDeviceStatusCommandService, DeviceStatusCommandService>();
@@ -181,7 +223,9 @@ builder.Services.AddScoped<IAgronomicThresholdRepository, AgronomicThresholdRepo
 builder.Services.AddScoped<ISensorReadingCommandService, SensorReadingCommandService>();
 builder.Services.AddScoped<ISensorReadingQueryService, SensorReadingQueryService>();
 builder.Services.AddScoped<IAgronomicThresholdQueryService, AgronomicThresholdQueryService>();
+builder.Services.AddScoped<ISectorHealthQueryService, SectorHealthQueryService>();
 builder.Services.AddScoped<IThresholdEvaluationService, ThresholdEvaluationService>();
+builder.Services.AddScoped<ISensorTypeDomainService, SensorTypeDomainService>();
 
 // Alerts & Notifications Bounded Context
 builder.Services.AddScoped<IAlertRepository, AlertRepository>();
@@ -196,16 +240,22 @@ builder.Services.AddScoped<IFirebaseNotificationService, FirebaseNotificationSer
 // Crop Monitoring Bounded Context
 builder.Services.AddScoped<IPlantationRepository, PlantationRepository>();
 builder.Services.AddScoped<ISectorRepository, SectorRepository>();
+builder.Services.AddScoped<IAgronomistPlantationAffiliationRepository, AgronomistPlantationAffiliationRepository>();
 builder.Services.AddScoped<IPlantationCommandService, PlantationCommandService>();
 builder.Services.AddScoped<IPlantationQueryService, PlantationQueryService>();
 builder.Services.AddScoped<IInstallationPlanService, InstallationPlanService>();
+builder.Services.AddScoped<IAgronomistPlantationAffiliationCommandService, AgronomistPlantationAffiliationCommandService>();
+builder.Services.AddScoped<IAgronomistPlantationAffiliationQueryService, AgronomistPlantationAffiliationQueryService>();
 builder.Services.AddScoped<ICropMonitoringFacade, CropMonitoringFacade>();
 
 Console.WriteLine("[INFO] [Startup] DI registrations complete. Registering event handlers...");
+
 // Event Handlers
 builder.Services.AddMediatR(config =>
 {
-    config.RegisterServicesFromAssemblyContaining(typeof(CropMonitoringIotDeviceRegisteredEventHandler));
+    config.RegisterServicesFromAssemblyContaining(
+        typeof(CropMonitoringIotDeviceRegisteredEventHandler)
+    );
     config.RegisterServicesFromAssemblyContaining(typeof(ThresholdExceededEventHandler));
     config.RegisterServicesFromAssemblyContaining(typeof(IotDeviceRegisteredEventHandler));
 });
@@ -260,28 +310,9 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        if (isProduction)
-        {
-            var pendingMigrations = context.Database.GetPendingMigrations().ToList();
-            Console.WriteLine($"[INFO] [Database] Pending migrations: {string.Join(", ", pendingMigrations)}");
-
-            if (pendingMigrations.Any())
-            {
-                Console.WriteLine("[INFO] [Database] Applying migrations...");
-                context.Database.Migrate();
-                Console.WriteLine("[INFO] [Database] Migrations applied successfully.");
-            }
-            else
-            {
-                Console.WriteLine("[INFO] [Database] No pending migrations found.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("[INFO] [Database] Ensuring MySQL schema is created...");
-            context.Database.EnsureCreated();
-            Console.WriteLine("[INFO] [Database] Schema ready.");
-        }
+        Console.WriteLine("[INFO] [Database] Ensuring PostgreSQL schema is created...");
+        context.Database.EnsureCreated();
+        Console.WriteLine("[INFO] [Database] Schema ready.");
 
         Console.WriteLine("[INFO] [Database] Running seed...");
         SeedAdmin(context);
@@ -316,25 +347,10 @@ static void SeedAdmin(AppDbContext context)
     {
         Console.WriteLine("[INFO] [Seed] Admin user already exists, skipping.");
     }
-
-    // Seed active subscription for admin if none exists
-    Console.WriteLine("[INFO] [Seed] Checking admin subscription...");
-    if (!context.Set<Subscription>().Any())
-    {
-        var adminUser = context.Set<User>().First(u => u.Role == UserRole.Administrator);
-        var sub = SubscriptionFactory.CreateSubscription(adminUser.Id, PlanType.Seed);
-        sub.Activate();
-        context.Set<Subscription>().Add(sub);
-        context.SaveChanges();
-        Console.WriteLine("[INFO] [Seed] Admin subscription created (Active — Seed plan).");
-    }
-    else
-    {
-        Console.WriteLine("[INFO] [Seed] Subscription already exists, skipping.");
-    }
 }
 
 Console.WriteLine("[INFO] [Startup] Configuring HTTP pipeline...");
+
 // Configure the HTTP request pipeline.
 if (!isProduction)
 {
@@ -361,6 +377,7 @@ if (!isProduction)
 }
 
 // Request authorization middleware must come before UseAuthorization()
+app.UseAuthentication();
 app.UseRequestAuthorization();
 Console.WriteLine("[INFO] [Startup] Request authorization middleware registered.");
 

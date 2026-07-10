@@ -21,4 +21,12 @@ public interface ISensorReadingRepository : IBaseRepository<SensorReading>
         int page,
         int size
     );
+
+    public Task<List<SensorReading>> FindByIotDeviceMacAddressAndTimeRange(
+        string iotDeviceMacAddress,
+        DateTime from,
+        DateTime to
+    );
+
+    public Task<List<SensorReading>> FindLatestByDeviceMacAsync(string deviceMac);
 }

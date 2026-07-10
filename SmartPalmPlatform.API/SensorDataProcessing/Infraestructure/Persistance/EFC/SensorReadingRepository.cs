@@ -59,4 +59,31 @@ public class SensorReadingRepository(AppDbContext context)
             .Take(size)
             .ToListAsync();
     }
+
+    public async Task<List<SensorReading>> FindByIotDeviceMacAddressAndTimeRange(
+        string iotDeviceMacAddress,
+        DateTime fromTime,
+        DateTime toTime
+    )
+    {
+        return await Context
+            .Set<SensorReading>()
+            .Where(reading =>
+                reading.IotDeviceMacAddress.Equals(iotDeviceMacAddress)
+                && reading.MeasuredAt >= fromTime
+                && reading.MeasuredAt <= toTime
+            )
+            .OrderByDescending(reading => reading.MeasuredAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<SensorReading>> FindLatestByDeviceMacAsync(string deviceMac)
+    {
+        return await Context
+            .Set<SensorReading>()
+            .Where(r => r.IotDeviceMacAddress == deviceMac)
+            .GroupBy(r => r.Type)
+            .Select(g => g.OrderByDescending(r => r.MeasuredAt).First())
+            .ToListAsync();
+    }
 }

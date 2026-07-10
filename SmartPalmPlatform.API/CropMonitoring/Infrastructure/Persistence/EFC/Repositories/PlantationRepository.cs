@@ -19,6 +19,7 @@ public class PlantationRepository(AppDbContext context)
     public async Task<Plantation?> FindByIdWithSectorsAsync(int id)
     {
         return await Context.Set<Plantation>()
+            .Include(p => p.Sectors)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 }

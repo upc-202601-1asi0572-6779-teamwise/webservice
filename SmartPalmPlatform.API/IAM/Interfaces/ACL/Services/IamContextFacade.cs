@@ -15,8 +15,8 @@ public class IamContextFacade(
     public async Task<int> CreateUser(string username, string password)
     {
         Console.WriteLine($"[INFO] [IAM] [IamContextFacade] CreateUser('{username}')");
-        var signUpCommand = new SignUpCommand(username, password, string.Empty, string.Empty, "PalmGrower");
-        await userCommandService.Handle(signUpCommand);
+        var command = new CreateUserCommand(username, password, string.Empty, string.Empty, "PalmGrower");
+        await userCommandService.Handle(command);
         var getUserByUsernameQuery = new GetUserByUsernameQuery(username);
         var result = await userQueryService.Handle(getUserByUsernameQuery);
         Console.WriteLine($"[INFO] [IAM] [IamContextFacade] CreateUser('{username}') → userId={result?.Id}");
@@ -62,6 +62,14 @@ public class IamContextFacade(
     public async Task<bool> HasActiveSubscriptionAsync(int userId)
     {
         Console.WriteLine($"[INFO] [IAM] [IamContextFacade] HasActiveSubscriptionAsync({userId})");
+
+        var userQuery = await userQueryService.Handle(new GetUserByIdQuery(userId));
+        if (userQuery is not null && userQuery.Role == UserRole.Administrator)
+        {
+            Console.WriteLine($"[INFO] [IAM] [IamContextFacade] HasActiveSubscriptionAsync({userId}) → true (Administrator exempt)");
+            return true;
+        }
+
         var query = new GetSubscriptionByUserIdQuery(userId);
         var subscription = await subscriptionQueryService.Handle(query);
         var active = subscription is not null

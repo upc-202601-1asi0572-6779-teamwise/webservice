@@ -45,4 +45,40 @@ public class CropMonitoringFacade(
         Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] PlantationHasActiveSectorsAsync({plantationId}) → {hasActive} (total sectors: {sectors.Count()})");
         return hasActive;
     }
+
+    public async Task<string?> GetSectorIotDeviceMacAsync(int sectorId)
+    {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorIotDeviceMacAsync({sectorId})");
+        var sector = await sectorRepository.FindByIdAsync(sectorId);
+        var mac = sector?.IotDeviceMacAddress;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorIotDeviceMacAsync({sectorId}) → {mac}");
+        return mac;
+    }
+
+    public async Task<int?> GetSectorPlantationIdAsync(int sectorId)
+    {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorPlantationIdAsync({sectorId})");
+        var sector = await sectorRepository.FindByIdAsync(sectorId);
+        var plantationId = sector?.PlantationId;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetSectorPlantationIdAsync({sectorId}) → {plantationId}");
+        return plantationId;
+    }
+
+    public async Task<int?> GetPalmGrowerIdByIotDeviceMacAsync(string iotDeviceMacAddress)
+    {
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetPalmGrowerIdByIotDeviceMacAsync({iotDeviceMacAddress})");
+        var sector = await sectorRepository.FindByIotDeviceMacAddressAsync(iotDeviceMacAddress);
+        if (sector is null)
+        {
+            Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetPalmGrowerIdByIotDeviceMacAsync({iotDeviceMacAddress}) → null (sector not found)");
+            return null;
+        }
+
+        var plantation = await plantationQueryService.Handle(
+            new GetPlantationByIdQuery(sector.PlantationId)
+        );
+        var palmGrowerId = plantation?.PalmGrowerId;
+        Console.WriteLine($"[INFO] [CropMonitoring] [CropMonitoringFacade] GetPalmGrowerIdByIotDeviceMacAsync({iotDeviceMacAddress}) → {palmGrowerId}");
+        return palmGrowerId;
+    }
 }

@@ -31,6 +31,9 @@ public class TokenService(IOptions<TokenSettings> tokenSettings) : ITokenService
     public string GenerateToken(User user)
     {
         var secret = _tokenSettings.Secret;
+        if (string.IsNullOrEmpty(secret))
+            throw new InvalidOperationException(
+                "JWT signing secret is not configured. Set 'TokenSettings:Secret' in appsettings.json or the TokenSettings__Secret environment variable.");
         var key = Encoding.ASCII.GetBytes(secret);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -65,6 +68,9 @@ public class TokenService(IOptions<TokenSettings> tokenSettings) : ITokenService
             return null;
         // Otherwise, perform validation
         var tokenHandler = new JsonWebTokenHandler();
+        if (string.IsNullOrEmpty(_tokenSettings.Secret))
+            throw new InvalidOperationException(
+                "JWT signing secret is not configured. Set 'TokenSettings:Secret' in appsettings.json or the TokenSettings__Secret environment variable.");
         var key = Encoding.ASCII.GetBytes(_tokenSettings.Secret);
         try
         {

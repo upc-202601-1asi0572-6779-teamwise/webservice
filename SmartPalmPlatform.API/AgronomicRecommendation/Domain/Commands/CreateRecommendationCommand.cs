@@ -1,7 +1,11 @@
+using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Model.Enums;
+
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Domain.Commands;
 
 public record CreateRecommendationCommand(
-    int PlantationId,
+    int? SectorId,
     int AgronomistId,
-    string Content
+    string Content,
+    RecommendationType Type = RecommendationType.SectorSpecific,
+    int? ReportId = null
 );

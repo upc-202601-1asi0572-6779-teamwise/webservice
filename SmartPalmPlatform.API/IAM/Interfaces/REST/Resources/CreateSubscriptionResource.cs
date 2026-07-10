@@ -1,3 +1,3 @@
 namespace SmartPalmPlatform.API.IAM.Interfaces.REST.Resources;
 
-public record CreateSubscriptionResource(string planType);
+public record CreateSubscriptionResource(int UserId, string PlanType);

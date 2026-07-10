@@ -3,16 +3,27 @@ using SmartPalmPlatform.API.AgronomicRecommendation.Domain.Queries;
 
 namespace SmartPalmPlatform.API.AgronomicRecommendation.Interfaces.REST.Transform;
 
-public static class GetPlantationRecommendationsFromResourceAssembler
+public static class GetSectorRecommendationsFromResourceAssembler
 {
-    public static GetPlantationRecommendationsQuery ToQueryFromResource(
-        int plantationId,
+    public static GetSectorRecommendationsQuery ToQueryFromResource(
+        int sectorId,
         string? status,
         int? agronomistId = null
     )
     {
-        return new GetPlantationRecommendationsQuery(
-            plantationId,
+        return new GetSectorRecommendationsQuery(
+            sectorId,
+            status is null ? null : StatusFromString(status),
+            agronomistId
+        );
+    }
+
+    public static GetGeneralRecommendationsQuery ToGeneralQueryFromResource(
+        string? status,
+        int? agronomistId = null
+    )
+    {
+        return new GetGeneralRecommendationsQuery(
             status is null ? null : StatusFromString(status),
             agronomistId
         );
@@ -20,12 +31,8 @@ public static class GetPlantationRecommendationsFromResourceAssembler
 
     private static RecommendationStatus StatusFromString(string status)
     {
-        return status switch
-        {
-            "pending" => RecommendationStatus.Pending,
-            "approved" => RecommendationStatus.Approved,
-            "published" => RecommendationStatus.Published,
-            _ => throw new ArgumentException($"Invalid status '{status}'. Valid values: pending, approved, published."),
-        };
+        if (Enum.TryParse<RecommendationStatus>(status, ignoreCase: true, out var parsed))
+            return parsed;
+        throw new ArgumentException($"Invalid status '{status}'. Valid values: Pending, Approved, Published (case-insensitive).");
     }
 }

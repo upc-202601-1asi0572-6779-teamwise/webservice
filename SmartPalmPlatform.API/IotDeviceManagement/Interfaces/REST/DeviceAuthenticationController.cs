@@ -57,7 +57,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
             }
         }
 
-        [HttpPost("{gateway-mac}/iot-devices")]
+        [HttpPost("{gatewayMac}/iot-devices")]
         [SwaggerOperation(
             Summary = "Register an IoT device under an edge gateway",
             Description = "Registers a new IoT device identified by its MAC address, associating it with the edge gateway given in the route.",
@@ -67,7 +67,7 @@ namespace SmartPalmPlatform.API.IotDeviceManagement.Interfaces.REST
         [SwaggerResponse(StatusCodes.Status404NotFound, "The edge gateway was not found")]
         [SwaggerResponse(StatusCodes.Status409Conflict, "The IoT device is already registered")]
         public async Task<IActionResult> RegisterIotDevice(
-            [FromRoute(Name = "gateway-mac")] string gatewayMac,
+            string gatewayMac,
             [FromBody] IotDeviceRegistrationResource resource
         )
         {

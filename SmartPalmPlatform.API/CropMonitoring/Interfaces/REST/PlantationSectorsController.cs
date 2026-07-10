@@ -66,7 +66,6 @@ public class PlantationSectorsController(
     }
 
     [HttpGet]
-    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Get sectors by plantation",
         Description = "Returns all sectors for a plantation.",

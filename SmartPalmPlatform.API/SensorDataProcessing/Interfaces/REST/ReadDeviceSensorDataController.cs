@@ -11,6 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [Authorize]
+[RequireActiveSubscription]
 [ApiController]
 [Route("api/v1/edge-gateways")]
 [Produces(MediaTypeNames.Application.Json)]
@@ -21,7 +22,7 @@ public class ReadDeviceSensorDataController(
 ) : ControllerBase
 {
     [AllowAnonymous]
-    [HttpPost("{gateway-mac}/sensor-readings")]
+    [HttpPost("{gatewayMac}/sensor-readings")]
     [SwaggerOperation(
         Summary = "Submit sensor readings from an edge gateway",
         Description = "Ingests a batch of sensor readings sent by an edge gateway, grouped by the IoT device that produced them.",
@@ -29,7 +30,7 @@ public class ReadDeviceSensorDataController(
     [SwaggerResponse(StatusCodes.Status201Created, "The sensor readings were persisted")]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid payload")]
     public async Task<IActionResult> SubmitSensorReadings(
-        [FromRoute(Name = "gateway-mac")] string gatewayMac,
+        string gatewayMac,
         [FromBody] ReadDeviceSensorsDataResource resource
     )
     {
@@ -61,17 +62,17 @@ public class ReadDeviceSensorDataController(
         }
     }
 
-    [HttpGet("{gateway-mac}/sensor-readings")]
+    [HttpGet("{gatewayMac}/sensor-readings")]
     [SwaggerOperation(
         Summary = "Get sensor readings of an edge gateway",
         Description = "Returns the historical sensor readings of every IoT device under the given edge gateway. Supports filtering by date range and IoT device, and pagination.",
         OperationId = "GetGatewaySensorReadings")]
     [SwaggerResponse(StatusCodes.Status200OK, "The sensor readings were found", typeof(IEnumerable<SensorReadingViewResource>))]
     public async Task<IActionResult> GetSensorReadings(
-        [FromRoute(Name = "gateway-mac")] string gatewayMac,
+        string gatewayMac,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
-        [FromQuery(Name = "device-mac")] string? deviceMac,
+        string? deviceMac,
         [FromQuery] int page = 1,
         [FromQuery] int size = 100
     )

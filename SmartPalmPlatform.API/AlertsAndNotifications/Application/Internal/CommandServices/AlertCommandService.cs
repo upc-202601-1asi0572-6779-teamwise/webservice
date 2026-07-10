@@ -12,7 +12,7 @@ public class AlertCommandService(
 {
     public async Task<Alert> Handle(AcknowledgeAlertCommand command)
     {
-        var alert = await alertRepository.FindByGuidAsync(command.AlertId);
+        var alert = await alertRepository.FindByIdAsync(command.AlertId);
         if (alert is null)
             throw new KeyNotFoundException($"Alert {command.AlertId} not found.");
 

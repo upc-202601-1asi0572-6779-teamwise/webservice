@@ -11,7 +11,8 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        var allowAnonymous = context.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>().Any();
+        var allowAnonymous = context.ActionDescriptor.EndpointMetadata
+            .OfType<AllowAnonymousAttribute>().Any();
 
         if (allowAnonymous)
             return;
@@ -30,7 +31,9 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
             var userRoleName = Enum.GetName(user.Role);
 
             if (userRoleName == null || !requiredRoles.Contains(userRoleName))
+            {
                 context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
+            }
         }
     }
 }

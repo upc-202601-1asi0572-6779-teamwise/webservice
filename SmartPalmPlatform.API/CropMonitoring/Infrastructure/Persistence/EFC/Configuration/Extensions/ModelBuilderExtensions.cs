@@ -47,9 +47,24 @@ public static class ModelBuilderExtensions
             entity.Property(s => s.ActivatedAt);
 
             entity.HasOne<Plantation>()
-                .WithMany()
+                .WithMany(p => p.Sectors)
                 .HasForeignKey(s => s.PlantationId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AgronomistPlantationAffiliation>(entity =>
+        {
+            entity.ToTable("agronomist_plantation_affiliations");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Id).IsRequired().ValueGeneratedOnAdd();
+            entity.Property(a => a.AgronomistId).IsRequired();
+            entity.Property(a => a.PlantationId).IsRequired();
+            entity.Property(a => a.AffiliatedAt).IsRequired();
+            entity.Property(a => a.DetachedAt);
+
+            entity.HasIndex(a => new { a.AgronomistId, a.PlantationId })
+                .IsUnique()
+                .HasDatabaseName("ix_agronomist_plantation_affil");
         });
     }
 }

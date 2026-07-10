@@ -7,4 +7,5 @@ public interface IPlantationQueryService
 {
     Task<Plantation?> Handle(GetPlantationByIdQuery query);
     Task<List<Plantation>> Handle(GetPlantationsByUserIdQuery query);
+    Task<IEnumerable<Plantation>> Handle(GetAllPlantationsQuery query);
 }

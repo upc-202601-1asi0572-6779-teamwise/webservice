@@ -7,4 +7,5 @@ public interface ISensorReadingQueryService
 {
     Task<List<SensorReading>> Handle(SensorReadingQuery query);
     Task<List<SensorReading>> Handle(DeviceSensorReadingQuery query);
+    Task<List<SensorReading>> Handle(SectorSensorDataQuery query);
 }

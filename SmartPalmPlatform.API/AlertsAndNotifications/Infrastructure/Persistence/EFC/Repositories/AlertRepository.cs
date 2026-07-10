@@ -10,7 +10,7 @@ namespace SmartPalmPlatform.API.AlertsAndNotifications.Infrastructure.Persistenc
 public class AlertRepository(AppDbContext context)
     : BaseRepository<Alert>(context), IAlertRepository
 {
-    public async Task<Alert?> FindByGuidAsync(Guid alertId)
+    public async Task<Alert?> FindByIdAsync(int alertId)
     {
         return await Context.Set<Alert>().FirstOrDefaultAsync(a => a.Id == alertId);
     }
@@ -27,6 +27,13 @@ public class AlertRepository(AppDbContext context)
     {
         return await Context.Set<Alert>()
             .Where(a => a.SensorType == sensorType)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Alert>> FindAllAsync()
+    {
+        return await Context.Set<Alert>()
+            .OrderByDescending(a => a.Timestamp)
             .ToListAsync();
     }
 }
