@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [Authorize]
+[RequireActiveSubscription]
 [ApiController]
 [Route("api/v1/devices")]
 [Produces(MediaTypeNames.Application.Json)]

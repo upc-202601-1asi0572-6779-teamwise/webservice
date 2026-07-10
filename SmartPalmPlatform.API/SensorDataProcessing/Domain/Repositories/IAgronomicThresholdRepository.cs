@@ -15,8 +15,5 @@ public interface IAgronomicThresholdRepository : IBaseRepository<AgronomicThresh
         SensorType type
     );
 
-    // Todo IoT device registrado recibe un AgronomicThreshold por cada SensorType al
-    // registrarse (ver IotDeviceRegisteredEventHandler), así que esta tabla sirve como
-    // comprobante local de existencia sin depender del repositorio de IotDeviceManagement.
     public Task<bool> ExistsByIotDeviceMacAddress(string iotDeviceMacAddress);
 }

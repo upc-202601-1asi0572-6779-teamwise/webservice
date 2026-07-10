@@ -19,7 +19,6 @@ public class AgronomicThresholdController(
     IAgronomicThresholdQueryService agronomicThresholdQueryService
 ) : ControllerBase
 {
-    [AllowAnonymous]
     [HttpGet("{device-mac}/thresholds")]
     [SwaggerOperation(
         Summary = "Get the agronomic thresholds of an IoT device",

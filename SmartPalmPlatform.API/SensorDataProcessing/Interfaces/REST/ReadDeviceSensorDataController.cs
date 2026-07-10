@@ -11,6 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace SmartPalmPlatform.API.SensorDataProcessing.Interfaces.REST;
 
 [Authorize]
+[RequireActiveSubscription]
 [ApiController]
 [Route("api/v1/edge-gateways")]
 [Produces(MediaTypeNames.Application.Json)]
