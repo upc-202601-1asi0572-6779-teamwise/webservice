@@ -8,6 +8,7 @@ public static class AlertResourceFromEntityAssembler
     public static AlertResource ToResourceFromEntity(Alert entity)
     {
         return new AlertResource(
+            entity.Id,
             entity.SensorType.ToString(),
             entity.Message,
             entity.Level.ToString(),
