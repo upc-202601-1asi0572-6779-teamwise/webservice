@@ -11,8 +11,6 @@ public static class SubscriptionResourceFromEntityAssembler
             entity.PlanType.ToString(),
             entity.PlanName,
             entity.Price,
-            entity.MaxHectares,
-            entity.MaxSensors,
             entity.Status.ToString(),
             entity.StartDate.ToString("o"),
             entity.EndDate.ToString("o"),

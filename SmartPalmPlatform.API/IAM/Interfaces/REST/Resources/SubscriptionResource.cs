@@ -4,8 +4,6 @@ public record SubscriptionResource(
     string planType,
     string planName,
     decimal price,
-    int? maxHectares,
-    int? maxSensors,
     string status,
     string startDate,
     string endDate,

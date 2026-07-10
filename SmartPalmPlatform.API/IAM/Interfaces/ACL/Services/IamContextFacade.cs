@@ -15,8 +15,8 @@ public class IamContextFacade(
     public async Task<int> CreateUser(string username, string password)
     {
         Console.WriteLine($"[INFO] [IAM] [IamContextFacade] CreateUser('{username}')");
-        var signUpCommand = new SignUpCommand(username, password, string.Empty, string.Empty, "PalmGrower");
-        await userCommandService.Handle(signUpCommand);
+        var command = new CreateUserCommand(username, password, string.Empty, string.Empty, "PalmGrower");
+        await userCommandService.Handle(command);
         var getUserByUsernameQuery = new GetUserByUsernameQuery(username);
         var result = await userQueryService.Handle(getUserByUsernameQuery);
         Console.WriteLine($"[INFO] [IAM] [IamContextFacade] CreateUser('{username}') → userId={result?.Id}");

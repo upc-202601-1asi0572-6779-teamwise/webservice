@@ -5,11 +5,11 @@ namespace SmartPalmPlatform.API.IAM.Domain.Model.ValueObjects;
 public record SubscriptionPlan(
     PlanType Type,
     string Name,
-    string Description,
     decimal Price,
     BillingCycle Cycle,
     int? MaxHectares,
-    int? MaxSensors
+    int? MaxSensors,
+    int? MaxPlantationHistory
 );
 
 public static class SubscriptionPlanProvider
@@ -18,13 +18,15 @@ public static class SubscriptionPlanProvider
     {
         PlanType.Seed => new SubscriptionPlan(
             PlanType.Seed, "Seed",
-            "Basic plan for small producers. Includes monitoring of up to 50 hectares with 20 sensors.",
-            149m, BillingCycle.Monthly, 50, 20),
+            149m, BillingCycle.Monthly, 50, 20, 3),
 
         PlanType.Harvest => new SubscriptionPlan(
             PlanType.Harvest, "Harvest",
-            "Intermediate plan for medium producers. Unlimited hectares and sensors, ideal for growing operations.",
-            349m, BillingCycle.Monthly, null, null),
+            349m, BillingCycle.Monthly, null, null, null),
+
+        PlanType.Custom => new SubscriptionPlan(
+            PlanType.Custom, "Custom",
+            0m, BillingCycle.Monthly, null, null, null),
 
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };

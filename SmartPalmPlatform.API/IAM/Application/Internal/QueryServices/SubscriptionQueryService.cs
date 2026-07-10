@@ -16,4 +16,9 @@ public class SubscriptionQueryService(ISubscriptionRepository subscriptionReposi
     {
         return await subscriptionRepository.FindByIdAsync(query.SubscriptionId);
     }
+
+    public async Task<IEnumerable<Subscription>> Handle(GetAllSubscriptionsQuery query)
+    {
+        return await subscriptionRepository.ListAsync();
+    }
 }

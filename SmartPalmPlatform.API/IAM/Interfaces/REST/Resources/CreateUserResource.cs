@@ -1,10 +1,9 @@
 namespace SmartPalmPlatform.API.IAM.Interfaces.REST.Resources;
 
-public record UserResource(
-    int id,
+public record CreateUserResource(
     string username,
+    string password,
     string email,
     string fullName,
-    string role,
-    string status
+    string role
 );

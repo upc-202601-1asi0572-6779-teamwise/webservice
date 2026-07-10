@@ -9,8 +9,6 @@ public class Subscription
     public PlanType PlanType { get; private set; }
     public string PlanName { get; private set; } = null!;
     public decimal Price { get; private set; }
-    public int? MaxHectares { get; private set; }
-    public int? MaxSensors { get; private set; }
     public SubscriptionStatus Status { get; private set; }
     public DateTime StartDate { get; private set; }
     public DateTime EndDate { get; private set; }
@@ -22,8 +20,6 @@ public class Subscription
         PlanType planType,
         string planName,
         decimal price,
-        int? maxHectares,
-        int? maxSensors,
         BillingCycle billingCycle,
         DateTime startDate,
         DateTime endDate,
@@ -42,8 +38,6 @@ public class Subscription
         PlanType = planType;
         PlanName = planName;
         Price = price;
-        MaxHectares = maxHectares;
-        MaxSensors = maxSensors;
         Status = initialStatus;
         StartDate = startDate;
         EndDate = endDate;
