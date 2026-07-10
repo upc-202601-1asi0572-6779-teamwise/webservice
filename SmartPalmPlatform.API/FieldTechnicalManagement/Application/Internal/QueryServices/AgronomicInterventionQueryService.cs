@@ -13,4 +13,9 @@ public class AgronomicInterventionQueryService(
     {
         return await interventionRepository.FindByIdAsync(query.InterventionId);
     }
+
+    public async Task<IEnumerable<AgronomicIntervention>> Handle(GetAgronomicInterventionsBySectorIdQuery query)
+    {
+        return await interventionRepository.FindBySectorIdAsync(query.SectorId);
+    }
 }

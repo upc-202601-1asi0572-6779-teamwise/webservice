@@ -6,11 +6,12 @@ namespace SmartPalmPlatform.API.FieldTechnicalManagement.Interfaces.REST.Transfo
 public static class RegisterCommandFromResourceAssembler
 {
     public static RegisterAgronomicInterventionCommand ToCommandFromResource(
+        int sectorId,
         RegisterInterventionResource resource
     )
     {
         return new RegisterAgronomicInterventionCommand(
-            resource.sectorId,
+            sectorId,
             resource.description,
             resource.performedBy,
             resource.executionDate,
