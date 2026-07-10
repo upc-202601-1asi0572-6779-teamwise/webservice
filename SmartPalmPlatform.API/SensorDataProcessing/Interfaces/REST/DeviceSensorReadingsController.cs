@@ -19,7 +19,7 @@ public class DeviceSensorReadingsController(
     ISensorReadingQueryService sensorReadingQueryService
 ) : ControllerBase
 {
-    [HttpGet("{device-mac}/sensor-readings")]
+    [HttpGet("{deviceMac}/sensor-readings")]
     [SwaggerOperation(
         Summary = "Get sensor readings of an IoT device",
         Description = "Returns the historical sensor readings of a single IoT device, regardless of which edge gateway forwarded them. Supports filtering by date range and pagination.",
@@ -27,7 +27,7 @@ public class DeviceSensorReadingsController(
     [SwaggerResponse(StatusCodes.Status200OK, "The sensor readings were found", typeof(IEnumerable<SensorReadingViewResource>))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "The IoT device was not found")]
     public async Task<IActionResult> GetSensorReadings(
-        [FromRoute(Name = "device-mac")] string deviceMac,
+        string deviceMac,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
         [FromQuery] int page = 1,
